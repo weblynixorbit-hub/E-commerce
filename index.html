@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrbitShop — WebLynix Orbit</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>
+tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},colors:{accent:'#2563EB','accent-light':'#3B82F6','accent-dark':'#1D4ED8'}}}}
+</script>
+<style>
+:root{--sidebar-w:260px}
+*{margin:0;padding:0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:rgba(128,128,128,.3) transparent}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:rgba(128,128,128,.3);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+body{font-family:'Inter',sans-serif;overflow:hidden;height:100vh}
+#loginScreen{position:fixed;inset:0;z-index:100;display:flex;background:#000}
+.login-left{flex:1;background:linear-gradient(135deg,#0a0a0a 0%,#111827 50%,#0a0a0a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;position:relative;overflow:hidden}
+.login-left::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.15),transparent 70%);top:-100px;right:-100px}
+.login-left::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.1),transparent 70%);bottom:-50px;left:-50px}
+.login-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;background:#0a0a0a}
+.login-form{width:100%;max-width:400px}
+.login-input{width:100%;height:48px;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:0 16px;background:rgba(255,255,255,.05);color:#fff;font-size:14px;outline:none;transition:.2s}
+.login-input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.login-input::placeholder{color:rgba(255,255,255,.3)}
+html:not(.dark) .login-left{background:linear-gradient(135deg,#f8fafc 0%,#e2e8f0 50%,#f8fafc 100%)}
+html:not(.dark) .login-left::before{background:radial-gradient(circle,rgba(37,99,235,.08),transparent 70%)}
+html:not(.dark) .login-right{background:#fff}
+html:not(.dark) .login-input{border-color:#e2e8f0;background:#f8fafc;color:#0f172a}
+html:not(.dark) .login-input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+html:not(.dark) .login-input::placeholder{color:#94a3b8}
+#appShell{display:none;height:100vh}
+#appShell.active{display:flex}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06);background:rgba(10,10,10,.95);backdrop-filter:blur(20px);z-index:40;transition:transform .3s ease}
+html:not(.dark) .sidebar{background:rgba(255,255,255,.95);border-color:rgba(0,0,0,.06)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35}
+.sidebar-overlay.show{display:block}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 20px;margin:2px 10px;border-radius:8px;color:rgba(255,255,255,.5);font-size:13.5px;font-weight:500;cursor:pointer;transition:.2s;position:relative}
+html:not(.dark) .nav-item{color:#64748b}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.05)}
+html:not(.dark) .nav-item:hover{color:#0f172a;background:rgba(0,0,0,.04)}
+.nav-item.active{color:#fff;background:rgba(37,99,235,.15)}
+html:not(.dark) .nav-item.active{color:#2563EB;background:rgba(37,99,235,.08)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:#2563EB;border-radius:0 3px 3px 0}
+.nav-item i{width:18px;height:18px;flex-shrink:0}
+.topbar{height:64px;min-height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(10,10,10,.8);backdrop-filter:blur(20px)}
+html:not(.dark) .topbar{background:rgba(255,255,255,.8);border-color:rgba(0,0,0,.06)}
+.search-global{position:relative}
+.search-global input{width:320px;height:40px;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:0 16px 0 40px;background:rgba(255,255,255,.04);color:#fff;font-size:13px;outline:none;transition:.2s}
+html:not(.dark) .search-global input{border-color:#e2e8f0;background:#f8fafc;color:#0f172a}
+.search-global input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.search-global input::placeholder{color:rgba(255,255,255,.25)}
+html:not(.dark) .search-global input::placeholder{color:#94a3b8}
+.search-global>i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.3);width:16px;height:16px}
+html:not(.dark) .search-global>i{color:#94a3b8}
+#mainContent{flex:1;overflow-y:auto;padding:28px;scroll-behavior:smooth}
+.stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:22px;transition:.25s;position:relative;overflow:hidden}
+html:not(.dark) .stat-card{background:#fff;border-color:#f1f5f9;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.stat-card:hover{transform:translateY(-2px);border-color:rgba(37,99,235,.2)}
+.stat-card .icon-box{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.glass-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;backdrop-filter:blur(12px)}
+html:not(.dark) .glass-card{background:#fff;border-color:#f1f5f9;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;padding:12px 16px;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)}
+html:not(.dark) .data-table th{color:#94a3b8;background:#f8fafc;border-color:#f1f5f9}
+.data-table td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.8)}
+html:not(.dark) .data-table td{color:#334155;border-color:#f1f5f9}
+.data-table tr:hover td{background:rgba(37,99,235,.03)}
+html:not(.dark) .data-table tr:hover td{background:#f8fafc}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:.2s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#2563EB;color:#fff}.btn-primary:hover{background:#1D4ED8;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.btn-danger{background:#DC2626;color:#fff}.btn-danger:hover{background:#B91C1C}
+.btn-success{background:#059669;color:#fff}.btn-success:hover{background:#047857}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1)}.btn-ghost:hover{background:rgba(255,255,255,.05);color:#fff;border-color:rgba(255,255,255,.2)}
+html:not(.dark) .btn-ghost{color:#64748b;border-color:#e2e8f0}html:not(.dark) .btn-ghost:hover{background:#f8fafc;color:#0f172a;border-color:#cbd5e1}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:7px}
+.btn-xs{padding:4px 8px;font-size:11px;border-radius:6px}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-blue{background:rgba(37,99,235,.12);color:#60A5FA}
+.badge-green{background:rgba(5,150,105,.12);color:#34D399}
+.badge-yellow{background:rgba(245,158,11,.12);color:#FBBF24}
+.badge-red{background:rgba(220,38,38,.12);color:#F87171}
+.badge-gray{background:rgba(255,255,255,.06);color:rgba(255,255,255,.5)}
+html:not(.dark) .badge-gray{background:#f1f5f9;color:#64748b}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+html:not(.dark) .form-group label{color:#64748b}
+.form-control{width:100%;height:44px;border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:0 14px;background:rgba(255,255,255,.04);color:#fff;font-size:13.5px;outline:none;transition:.2s}
+html:not(.dark) .form-control{border-color:#e2e8f0;background:#fff;color:#0f172a}
+.form-control:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+textarea.form-control{height:90px;padding:12px 14px;resize:vertical}
+select.form-control{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='rgba(255,255,255,.3)' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+html:not(.dark) select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E")}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal-box{background:#111;border:1px solid rgba(255,255,255,.08);border-radius:16px;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;animation:modalIn .25s ease;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+html:not(.dark) .modal-box{background:#fff;border-color:#e2e8f0;box-shadow:0 25px 60px rgba(0,0,0,.1)}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+#toastContainer{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;animation:toastIn .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.3);min-width:280px;max-width:400px}
+.toast-success{background:#065F46;color:#A7F3D0;border:1px solid rgba(167,243,208,.15)}
+.toast-error{background:#7F1D1D;color:#FCA5A5;border:1px solid rgba(252,165,165,.15)}
+.toast-info{background:#1E3A5F;color:#93C5FD;border:1px solid rgba(147,197,253,.15)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.toast-exit{animation:toastOut .3s ease forwards}
+@keyframes toastOut{to{opacity:0;transform:translateX(40px)}}
+.timeline{position:relative;padding-left:30px}
+.timeline::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.08)}
+html:not(.dark) .timeline::before{background:#e2e8f0}
+.timeline-step{position:relative;padding-bottom:28px;display:flex;align-items:flex-start;gap:14px}
+.timeline-step:last-child{padding-bottom:0}
+.timeline-dot{position:absolute;left:-30px;top:2px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:1}
+.timeline-dot.done{background:#2563EB;color:#fff}
+.timeline-dot.pending{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);color:rgba(255,255,255,.3)}
+html:not(.dark) .timeline-dot.pending{background:#f1f5f9;border-color:#e2e8f0;color:#94a3b8}
+.timeline-dot i{width:12px;height:12px}
+.pagination{display:flex;align-items:center;gap:4px;margin-top:16px;justify-content:center}
+.page-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.5);transition:.2s}
+html:not(.dark) .page-btn{border-color:#e2e8f0;color:#64748b}
+.page-btn:hover{border-color:rgba(37,99,235,.3);color:#2563EB}
+.page-btn.active{background:#2563EB;color:#fff;border-color:#2563EB}
+.fade-in{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,.25)}
+html:not(.dark) .empty-state{color:#94a3b8}
+.empty-state i{width:48px;height:48px;margin-bottom:14px;opacity:.4}
+.stars{display:flex;gap:2px;color:#FBBF24}
+.stars .empty{color:rgba(255,255,255,.1)}
+html:not(.dark) .stars .empty{color:#e2e8f0}
+.avatar{border-radius:8px;object-fit:cover}
+.avatar-sm{width:32px;height:32px}
+.tab-bar{display:flex;gap:2px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:24px}
+html:not(.dark) .tab-bar{border-color:#e2e8f0}
+.tab-btn{padding:11px 20px;font-size:13px;font-weight:600;color:rgba(255,255,255,.4);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:.2s}
+html:not(.dark) .tab-btn{color:#94a3b8}
+.tab-btn:hover{color:rgba(255,255,255,.7)}
+html:not(.dark) .tab-btn:hover{color:#334155}
+.tab-btn.active{color:#2563EB;border-bottom-color:#2563EB}
+@media(max-width:1024px){.search-global input{width:220px}}
+@media(max-width:768px){
+.sidebar{position:fixed;left:0;top:0;transform:translateX(-100%)}
+.sidebar.open{transform:translateX(0)}
+.search-global input{width:160px}
+.form-row{grid-template-columns:1fr}
+#mainContent{padding:16px}
+}
+@media(max-width:480px){.search-global{display:none}}
+@media print{.sidebar,.topbar{display:none!important}#mainContent{padding:0!important}}
+</style>
+</head>
+<body class="bg-black text-white">
+
+<div id="loginScreen">
+  <div class="login-left hidden md:flex">
+    <div class="relative z-10 text-center">
+      <div class="flex items-center justify-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-xl bg-accent flex items-center justify-center"><i data-lucide="orbit" class="w-7 h-7 text-white"></i></div>
+        <span class="text-3xl font-extrabold tracking-tight text-white">OrbitShop</span>
+      </div>
+      <p class="text-lg text-white/40 font-light max-w-xs mx-auto leading-relaxed">Sell Smarter.<br>Shop Faster.<br>Grow Bigger.</p>
+      <div class="mt-10 flex items-center justify-center gap-8 text-white/20 text-xs font-medium"><span>WebLynix Orbit</span><span class="w-1 h-1 rounded-full bg-white/20"></span><span>v2.0</span></div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-form">
+      <div class="flex items-center gap-3 mb-2 md:hidden">
+        <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center"><i data-lucide="orbit" class="w-6 h-6 text-white"></i></div>
+        <span class="text-2xl font-extrabold text-white">OrbitShop</span>
+      </div>
+      <h1 class="text-2xl font-bold mb-1" style="color:inherit">Welcome back</h1>
+      <p class="text-sm mb-8" style="color:rgba(255,255,255,.35)">Sign in to your admin dashboard</p>
+      <div class="space-y-4">
+        <div><label class="block text-xs font-semibold mb-2" style="color:rgba(255,255,255,.4)">EMAIL</label><input type="email" id="loginEmail" class="login-input" placeholder="admin@orbitshop.demo" value="admin@orbitshop.demo"></div>
+        <div><label class="block text-xs font-semibold mb-2" style="color:rgba(255,255,255,.4)">PASSWORD</label><input type="password" id="loginPassword" class="login-input" placeholder="Enter password" value="admin123"></div>
+        <div id="loginError" class="text-red-400 text-xs font-medium hidden">Invalid credentials</div>
+        <button id="loginBtn" class="btn btn-primary w-full justify-center h-12 text-sm rounded-xl mt-2"><i data-lucide="log-in" class="w-4 h-4"></i> Sign In</button>
+      </div>
+      <p class="text-center text-xs mt-6" style="color:rgba(255,255,255,.2)">Demo: admin@orbitshop.demo / admin123</p>
+    </div>
+  </div>
+</div>
+
+<div id="appShell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="p-5 pb-4 border-b border-white/[.06]" style="border-color:rgba(255,255,255,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-accent flex items-center justify-center flex-shrink-0"><i data-lucide="orbit" class="w-5 h-5 text-white"></i></div>
+        <div><div class="text-sm font-bold text-white">OrbitShop</div><div class="text-[10px] font-medium" style="color:rgba(255,255,255,.3)">WebLynix Orbit</div></div>
+      </div>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-3" id="sideNav"></nav>
+    <div class="p-4 border-t border-white/[.06]" style="border-color:rgba(255,255,255,.06)">
+      <div class="nav-item" data-nav="logout"><i data-lucide="log-out" class="w-[18px] h-[18px]"></i><span>Logout</span></div>
+    </div>
+  </aside>
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="topbar">
+      <div class="flex items-center gap-4">
+        <button id="menuToggle" class="lg:hidden text-white/50 hover:text-white"><i data-lucide="menu" class="w-5 h-5"></i></button>
+        <div class="search-global"><i data-lucide="search" class="w-4 h-4"></i><input type="text" id="globalSearch" placeholder="Search products, customers, orders..."></div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button id="themeToggle" class="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/5 transition" style="color:rgba(255,255,255,.4)"><i data-lucide="moon" class="w-[18px] h-[18px]"></i></button>
+        <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center cursor-pointer" data-nav="profile"><i data-lucide="user" class="w-4 h-4 text-accent-light"></i></div>
+      </div>
+    </header>
+    <div id="mainContent" class="fade-in"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal-box" id="modalBox"></div></div>
+<div id="toastContainer"></div>
+
+<script>
+/* ===== STORAGE ===== */
+var S = {
+  get: function(k) { try { return JSON.parse(localStorage.getItem(k)) } catch(e) { return null } },
+  set: function(k, v) { localStorage.setItem(k, JSON.stringify(v)) },
+  getList: function(k) { return this.get(k) || [] },
+  setList: function(k, v) { this.set(k, v) },
+  getObj: function(k) { return this.get(k) || {} },
+  setObj: function(k, v) { this.set(k, v) },
+  add: function(k, item) { var l = this.getList(k); l.push(item); this.setList(k, l); return l },
+  update: function(k, id, data) { var l = this.getList(k); var i = l.findIndex(function(x){ return x.id === id }); if (i >= 0) { Object.assign(l[i], data); this.setList(k, l) } return l },
+  remove: function(k, id) { this.setList(k, this.getList(k).filter(function(x){ return x.id !== id })) },
+  find: function(k, id) { return this.getList(k).find(function(x){ return x.id === id }) },
+  clear: function(k) { localStorage.removeItem(k) },
+  clearAll: function() { var self = this; Object.keys(localStorage).filter(function(k){ return k.startsWith('orbitshop_') }).forEach(function(k){ self.clear(k) }) }
+};
+
+/* ===== UTILS ===== */
+var U = {
+  uid: function() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8) },
+  today: function() { return new Date().toISOString().split('T')[0] },
+  now: function() { return new Date().toISOString() },
+  fmtDate: function(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
+  fmtMoney: function(n, c) { c = c || '$'; return c + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+  img: function(seed, w, h) { w = w || 400; h = h || 400; return 'https://picsum.photos/seed/' + seed + '/' + w + '/' + h },
+  paginate: function(arr, page, perPage) { page = page || 1; perPage = perPage || 10; var total = arr.length, pages = Math.ceil(total / perPage) || 1; var start = (page - 1) * perPage; return { data: arr.slice(start, start + perPage), page: page, pages: pages, total: total, perPage: perPage } },
+  paginationHTML: function(page, pages) {
+    if (pages <= 1) return '';
+    var h = '<div class="pagination">';
+    h += '<button class="page-btn" data-page="' + (page - 1) + '" ' + (page <= 1 ? 'disabled style="opacity:.3;pointer-events:none"' : '') + '><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>';
+    var range = []; for (var i = Math.max(1, page - 2); i <= Math.min(pages, page + 2); i++) range.push(i);
+    if (range[0] > 1) { h += '<button class="page-btn" data-page="1">1</button>'; if (range[0] > 2) h += '<span class="text-xs px-1" style="color:rgba(255,255,255,.2)">...</span>'; }
+    range.forEach(function(p) { h += '<button class="page-btn ' + (p === page ? 'active' : '') + '" data-page="' + p + '">' + p + '</button>'; });
+    if (range[range.length - 1] < pages) { if (range[range.length - 1] < pages - 1) h += '<span class="text-xs px-1" style="color:rgba(255,255,255,.2)">...</span>'; h += '<button class="page-btn" data-page="' + pages + '">' + pages + '</button>'; }
+    h += '<button class="page-btn" data-page="' + (page + 1) + '" ' + (page >= pages ? 'disabled style="opacity:.3;pointer-events:none"' : '') + '><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>';
+    return h + '</div>';
+  },
+  starsHTML: function(rating) {
+    var h = '<div class="stars">'; for (var i = 1; i <= 5; i++) h += '<i data-lucide="star" class="w-3.5 h-3.5 ' + (i <= rating ? '' : 'empty') + '" ' + (i <= rating ? 'style="fill:currentColor"' : '') + '></i>'; return h + '</div>';
+  },
+  toCSV: function(headers, rows) {
+    var csv = [headers.join(','), ...rows.map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g, '""') + '"' }).join(',') })].join('\n');
+    var blob = new Blob([csv], { type: 'text/csv' }); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'orbitshop_export_' + U.today() + '.csv'; a.click(); URL.revokeObjectURL(a.href);
+  }
+};
+
+/* ===== UI ===== */
+var UI = {
+  toast: function(msg, type) {
+    type = type || 'success';
+    var c = document.getElementById('toastContainer');
+    var t = document.createElement('div'); t.className = 'toast toast-' + type;
+    var icons = { success: 'check-circle', error: 'x-circle', info: 'info' };
+    t.innerHTML = '<i data-lucide="' + (icons[type] || 'info') + '" class="w-5 h-5 flex-shrink-0"></i><span>' + msg + '</span>';
+    c.appendChild(t); this.icons();
+    setTimeout(function() { t.classList.add('toast-exit'); setTimeout(function() { t.remove() }, 300) }, 3000);
+  },
+  modal: function(html) { document.getElementById('modalBox').innerHTML = html; document.getElementById('modalOverlay').classList.add('show'); this.icons() },
+  closeModal: function() { document.getElementById('modalOverlay').classList.remove('show') },
+  confirm: function(msg, onConfirm) {
+    var self = this;
+    this.modal('<div class="p-6"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center"><i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i></div><h3 class="text-base font-bold">Confirm Action</h3></div><p class="text-sm mb-6" style="color:rgba(255,255,255,.5)">' + msg + '</p><div class="flex justify-end gap-3"><button class="btn btn-ghost" id="confirmNo">Cancel</button><button class="btn btn-danger" id="confirmYes">Delete</button></div></div>');
+    document.getElementById('confirmNo').onclick = function() { self.closeModal() };
+    document.getElementById('confirmYes').onclick = function() { self.closeModal(); onConfirm() };
+  },
+  icons: function() { if (window.lucide) try { lucide.createIcons() } catch(e) {} }
+};
+
+/* ===== AUTH ===== */
+var Auth = {
+  login: function(email, pw) { if (email === 'admin@orbitshop.demo' && pw === 'admin123') { S.set('orbitshop_auth', { email: email, name: 'Admin', logged: true, at: U.now() }); return true } return false },
+  logout: function() { S.clear('orbitshop_auth'); location.reload() },
+  check: function() { var a = S.get('orbitshop_auth'); return a && a.logged === true },
+  user: function() { return S.get('orbitshop_auth') || {} }
+};
+
+/* ===== NAVIGATION ===== */
+var NAV_ITEMS = [
+  { id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
+  { id: 'products', icon: 'package', label: 'Products' },
+  { id: 'categories', icon: 'grid-3x3', label: 'Categories' },
+  { id: 'customers', icon: 'users', label: 'Customers' },
+  { id: 'orders', icon: 'shopping-bag', label: 'Orders' },
+  { id: 'cart', icon: 'shopping-cart', label: 'Shopping Cart' },
+  { id: 'wishlist', icon: 'heart', label: 'Wishlist' },
+  { id: 'coupons', icon: 'ticket', label: 'Coupons' },
+  { id: 'reviews', icon: 'star', label: 'Reviews' },
+  { id: 'reports', icon: 'bar-chart-3', label: 'Reports' },
+  { id: 'settings', icon: 'settings', label: 'Settings' },
+  { id: 'profile', icon: 'user-circle', label: 'Profile' }
+];
+var currentModule = 'dashboard';
+var currentPage = {};
+
+function buildNav() {
+  var html = '';
+  NAV_ITEMS.forEach(function(n) { html += '<div class="nav-item ' + (n.id === currentModule ? 'active' : '') + '" data-nav="' + n.id + '"><i data-lucide="' + n.icon + '" class="w-[18px] h-[18px]"></i><span>' + n.label + '</span></div>'; });
+  document.getElementById('sideNav').innerHTML = html; UI.icons();
+}
+
+function navigate(mod) {
+  currentModule = mod; currentPage[mod] = 1;
+  buildNav(); renderModule();
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+function renderModule() {
+  var mc = document.getElementById('mainContent');
+  var fn = { dashboard: ModDashboard, products: ModProducts, categories: ModCategories, customers: ModCustomers, orders: ModOrders, cart: ModCart, wishlist: ModWishlist, coupons: ModCoupons, reviews: ModReviews, reports: ModReports, settings: ModSettings, profile: ModProfile };
+  var mod = fn[currentModule] || ModDashboard;
+  mc.innerHTML = mod.render(); mc.classList.remove('fade-in');
+  void mc.offsetWidth; mc.classList.add('fade-in');
+  UI.icons();
+  if (currentModule === 'dashboard') setTimeout(function() { ModDashboard.charts() }, 50);
+}
+
+/* ===== GENERIC CRUD ===== */
+function crudTable(cfg) {
+  var key = cfg.key, columns = cfg.columns, data = cfg.data || [], page = cfg.page || 1, perPage = cfg.perPage || 8;
+  var search = cfg.search || '', filterFn = cfg.filterFn, sortKey = cfg.sortKey, sortDir = cfg.sortDir || 'asc';
+  var actions = cfg.actions, emptyIcon = cfg.emptyIcon || 'inbox', emptyText = cfg.emptyText || 'No data found';
+  if (search) { var s = search.toLowerCase(); data = data.filter(function(r) { return columns.some(function(c) { return String(r[c.key] || '').toLowerCase().indexOf(s) >= 0 }) }) }
+  if (filterFn) data = data.filter(filterFn);
+  if (sortKey) { data = data.slice().sort(function(a, b) { var va = a[sortKey], vb = b[sortKey]; if (typeof va === 'number') return sortDir === 'asc' ? va - vb : vb - va; return sortDir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va)) }) }
+  var pg = U.paginate(data, page, perPage);
+  var h = '<div class="glass-card"><div style="overflow-x:auto"><table class="data-table"><thead><tr>';
+  columns.forEach(function(c) { h += '<th class="' + (c.sortable ? 'cursor-pointer hover:text-accent-light transition' : '') + '" ' + (c.sortable ? 'data-sort="' + c.key + '"' : '') + '>' + c.label + (c.sortable && sortKey === c.key ? (sortDir === 'asc' ? ' \u2191' : ' \u2193') : '') + '</th>'; });
+  if (actions) h += '<th style="text-align:right">Actions</th>';
+  h += '</tr></thead><tbody>';
+  if (!pg.data.length) {
+    h += '<tr><td colspan="' + (columns.length + (actions ? 1 : 0)) + '"><div class="empty-state"><i data-lucide="' + emptyIcon + '" class="w-12 h-12"></i><p class="text-sm">' + emptyText + '</p></div></td></tr>';
+  } else {
+    pg.data.forEach(function(r) {
+      h += '<tr>';
+      columns.forEach(function(c) { h += '<td>' + (c.render ? c.render(r[c.key], r) : (r[c.key] != null ? r[c.key] : '-')) + '</td>'; });
+      if (actions) h += '<td style="text-align:right"><div class="flex items-center justify-end gap-2">' + actions(r) + '</div></td>';
+      h += '</tr>';
+    });
+  }
+  h += '</tbody></table></div></div>' + U.paginationHTML(pg.page, pg.pages);
+  return { html: h, page: pg.page, pages: pg.pages, total: pg.total };
+}
+
+function crudForm(cfg) {
+  var title = cfg.title, fields = cfg.fields, data = cfg.data, onSave = cfg.onSave, saveLabel = cfg.saveLabel || 'Save';
+  var h = '<div class="p-6"><div class="flex items-center justify-between mb-6"><h3 class="text-lg font-bold">' + title + '</h3><button onclick="UI.closeModal()" class="text-white/30 hover:text-white transition"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="space-y-0">';
+  fields.forEach(function(f) {
+    var val = data ? (data[f.key] != null ? data[f.key] : (f.default != null ? f.default : '')) : (f.default != null ? f.default : '');
+    h += '<div class="form-group"><label>' + f.label + '</label>';
+    if (f.type === 'select') {
+      var opts = typeof f.options === 'function' ? f.options() : f.options;
+      h += '<select class="form-control" id="f_' + f.key + '">';
+      opts.forEach(function(o) { h += '<option value="' + o.value + '" ' + (val == o.value ? 'selected' : '') + '>' + o.label + '</option>'; });
+      h += '</select>';
+    } else if (f.type === 'textarea') {
+      h += '<textarea class="form-control" id="f_' + f.key + '">' + val + '</textarea>';
+    } else {
+      h += '<input type="' + (f.type || 'text') + '" class="form-control" id="f_' + f.key + '" value="' + val + '"' + (f.step ? ' step="' + f.step + '"' : '') + '>';
+    }
+    h += '</div>';
+  });
+  h += '</div><div class="flex justify-end gap-3 mt-4"><button class="btn btn-ghost" id="formCancelBtn">Cancel</button><button class="btn btn-primary" id="formSaveBtn">' + saveLabel + '</button></div></div>';
+  UI.modal(h);
+  document.getElementById('formCancelBtn').onclick = function() { UI.closeModal() };
+  document.getElementById('formSaveBtn').onclick = function() {
+    var d = {};
+    fields.forEach(function(f) { var el = document.getElementById('f_' + f.key); if (el) d[f.key] = (f.type === 'number' || f.type === 'range') ? +el.value : el.value });
+    onSave(d); UI.closeModal();
+  };
+}
+
+function g(id) { var el = document.getElementById(id); return el ? el.value.trim() : '' }
+
+/* ===== SEED DATA ===== */
+function seedData() {
+  if (S.get('orbitshop_categories')) return;
+  S.setList('orbitshop_categories', [
+    { id: 'c1', name: 'Electronics', description: 'Gadgets, devices and accessories', status: 'Active', created: '2024-01-15' },
+    { id: 'c2', name: 'Clothing', description: 'Apparel, footwear and fashion', status: 'Active', created: '2024-01-15' },
+    { id: 'c3', name: 'Home & Kitchen', description: 'Household items and kitchenware', status: 'Active', created: '2024-01-20' },
+    { id: 'c4', name: 'Accessories', description: 'Bags, wallets and personal items', status: 'Active', created: '2024-02-01' },
+    { id: 'c5', name: 'Sports & Fitness', description: 'Exercise and outdoor gear', status: 'Active', created: '2024-02-10' },
+    { id: 'c6', name: 'Health & Beauty', description: 'Skincare, supplements and wellness', status: 'Active', created: '2024-02-15' }
+  ]);
+  S.setList('orbitshop_products', [
+    { id:'p1', name:'Wireless Bluetooth Headphones', category:'c1', brand:'SoundMax', price:79.99, discount:10, stock:145, sku:'SM-WBH001', description:'Premium over-ear headphones with active noise cancellation.', image:U.img('headphones'), status:'Active', created:'2024-03-01' },
+    { id:'p2', name:'Smart Watch Pro', category:'c1', brand:'TechVibe', price:199.99, discount:15, stock:82, sku:'TV-SWP002', description:'Advanced smartwatch with health monitoring and AMOLED display.', image:U.img('smartwatch'), status:'Active', created:'2024-03-05' },
+    { id:'p3', name:'Organic Cotton T-Shirt', category:'c2', brand:'EcoWear', price:29.99, discount:0, stock:320, sku:'EW-OCT003', description:'100% organic cotton tee, sustainably sourced.', image:U.img('tshirt'), status:'Active', created:'2024-03-08' },
+    { id:'p4', name:'Running Shoes Ultra', category:'c2', brand:'SpeedStride', price:129.99, discount:20, stock:67, sku:'SS-RSU004', description:'Lightweight running shoes with responsive cushioning.', image:U.img('shoes'), status:'Active', created:'2024-03-10' },
+    { id:'p5', name:'Stainless Steel Water Bottle', category:'c3', brand:'HydroLife', price:24.99, discount:0, stock:200, sku:'HL-SSW005', description:'Double-wall insulated bottle, cold 24hrs, hot 12hrs.', image:U.img('bottle'), status:'Active', created:'2024-03-12' },
+    { id:'p6', name:'Portable Bluetooth Speaker', category:'c1', brand:'SoundMax', price:49.99, discount:5, stock:115, sku:'SM-PBS006', description:'Waterproof portable speaker with 360\u00b0 sound.', image:U.img('speaker'), status:'Active', created:'2024-03-14' },
+    { id:'p7', name:'Leather Wallet', category:'c4', brand:'UrbanCraft', price:39.99, discount:0, stock:90, sku:'UC-LW007', description:'Genuine leather bifold wallet with RFID blocking.', image:U.img('wallet'), status:'Active', created:'2024-03-16' },
+    { id:'p8', name:'Yoga Mat Premium', category:'c5', brand:'ZenFit', price:34.99, discount:10, stock:75, sku:'ZF-YMP008', description:'Extra thick non-slip yoga mat with alignment guides.', image:U.img('yogamat'), status:'Active', created:'2024-03-18' },
+    { id:'p9', name:'LED Desk Lamp', category:'c3', brand:'LumiTech', price:44.99, discount:0, stock:130, sku:'LT-LDL009', description:'Adjustable LED lamp with 5 brightness levels and USB port.', image:U.img('desklamp'), status:'Active', created:'2024-03-20' },
+    { id:'p10', name:'Mechanical Keyboard RGB', category:'c1', brand:'KeyCraft', price:89.99, discount:12, stock:58, sku:'KC-MKR010', description:'Hot-swappable mechanical keyboard with per-key RGB.', image:U.img('keyboard'), status:'Active', created:'2024-03-22' },
+    { id:'p11', name:'Canvas Backpack', category:'c4', brand:'UrbanCraft', price:59.99, discount:0, stock:95, sku:'UC-CB011', description:'Durable canvas backpack with padded laptop compartment.', image:U.img('backpack'), status:'Active', created:'2024-03-24' },
+    { id:'p12', name:'Protein Powder', category:'c6', brand:'NutriForce', price:49.99, discount:8, stock:180, sku:'NF-PP012', description:'Whey protein isolate, 25g protein per serving.', image:U.img('protein'), status:'Active', created:'2024-03-26' },
+    { id:'p13', name:'Wireless Mouse Ergonomic', category:'c1', brand:'KeyCraft', price:34.99, discount:0, stock:140, sku:'KC-WME013', description:'Ergonomic vertical wireless mouse with adjustable DPI.', image:U.img('mouse'), status:'Active', created:'2024-03-28' },
+    { id:'p14', name:'Ceramic Coffee Mug Set', category:'c3', brand:'HomeBliss', price:19.99, discount:0, stock:220, sku:'HB-CCM014', description:'Set of 4 handcrafted ceramic mugs.', image:U.img('mugs'), status:'Active', created:'2024-04-01' },
+    { id:'p15', name:'Fitness Tracker Band', category:'c1', brand:'TechVibe', price:69.99, discount:15, stock:88, sku:'TV-FTB015', description:'Slim fitness band with heart rate and sleep tracking.', image:U.img('fitband'), status:'Active', created:'2024-04-03' },
+    { id:'p16', name:'Denim Jacket Classic', category:'c2', brand:'UrbanStyle', price:89.99, discount:25, stock:42, sku:'US-DJC016', description:'Classic fit denim jacket with button closure.', image:U.img('denim'), status:'Active', created:'2024-04-05' },
+    { id:'p17', name:'Bamboo Cutting Board Set', category:'c3', brand:'HomeBliss', price:22.99, discount:0, stock:160, sku:'HB-BCB017', description:'Set of 3 bamboo cutting boards in different sizes.', image:U.img('cuttingboard'), status:'Active', created:'2024-04-08' },
+    { id:'p18', name:'Sunscreen SPF 50', category:'c6', brand:'GlowShield', price:15.99, discount:0, stock:250, sku:'GS-SS018', description:'Broad spectrum SPF 50, lightweight formula.', image:U.img('sunscreen'), status:'Active', created:'2024-04-10' },
+    { id:'p19', name:'USB-C Hub Adapter', category:'c1', brand:'TechVibe', price:29.99, discount:10, stock:105, sku:'TV-UCH019', description:'7-in-1 USB-C hub with HDMI and PD charging.', image:U.img('usbhub'), status:'Active', created:'2024-04-12' },
+    { id:'p20', name:'Scented Candle Set', category:'c3', brand:'AromaLux', price:18.99, discount:0, stock:190, sku:'AL-SCS020', description:'Set of 6 soy wax scented candles in glass jars.', image:U.img('candles'), status:'Inactive', created:'2024-04-15' }
+  ]);
+  S.setList('orbitshop_customers', [
+    { id:'cu1', name:'James Wilson', email:'james@email.com', phone:'555-0101', address:'142 Oak Avenue', city:'New York', state:'NY', country:'USA', status:'Active', created:'2024-02-01' },
+    { id:'cu2', name:'Sarah Chen', email:'sarah.chen@email.com', phone:'555-0102', address:'89 Pine Street', city:'San Francisco', state:'CA', country:'USA', status:'Active', created:'2024-02-05' },
+    { id:'cu3', name:'Michael Brown', email:'m.brown@email.com', phone:'555-0103', address:'256 Elm Road', city:'Chicago', state:'IL', country:'USA', status:'Active', created:'2024-02-10' },
+    { id:'cu4', name:'Emily Davis', email:'emily.d@email.com', phone:'555-0104', address:'78 Maple Drive', city:'Los Angeles', state:'CA', country:'USA', status:'Active', created:'2024-02-15' },
+    { id:'cu5', name:'David Martinez', email:'d.martinez@email.com', phone:'555-0105', address:'445 Cedar Blvd', city:'Houston', state:'TX', country:'USA', status:'Inactive', created:'2024-02-20' },
+    { id:'cu6', name:'Jessica Taylor', email:'jess.t@email.com', phone:'555-0106', address:'321 Birch Lane', city:'Phoenix', state:'AZ', country:'USA', status:'Active', created:'2024-03-01' },
+    { id:'cu7', name:'Robert Anderson', email:'r.anderson@email.com', phone:'555-0107', address:'567 Walnut Street', city:'Philadelphia', state:'PA', country:'USA', status:'Active', created:'2024-03-05' },
+    { id:'cu8', name:'Amanda Thomas', email:'amanda.t@email.com', phone:'555-0108', address:'123 Spruce Ave', city:'San Antonio', state:'TX', country:'USA', status:'Active', created:'2024-03-10' },
+    { id:'cu9', name:'Christopher Jackson', email:'c.jackson@email.com', phone:'555-0109', address:'890 Ash Court', city:'San Diego', state:'CA', country:'USA', status:'Active', created:'2024-03-15' },
+    { id:'cu10', name:'Ashley White', email:'ashley.w@email.com', phone:'555-0110', address:'654 Poplar Way', city:'Dallas', state:'TX', country:'USA', status:'Active', created:'2024-03-20' }
+  ]);
+  S.setList('orbitshop_orders', [
+    { id:'o1', customer:'cu1', products:[{pid:'p1',qty:1},{pid:'p6',qty:1}], amount:121.48, date:'2025-01-10', payment:'Paid', status:'Delivered' },
+    { id:'o2', customer:'cu2', products:[{pid:'p2',qty:1}], amount:169.99, date:'2025-01-12', payment:'Paid', status:'Shipped' },
+    { id:'o3', customer:'cu3', products:[{pid:'p4',qty:2}], amount:207.98, date:'2025-01-14', payment:'Paid', status:'Packed' },
+    { id:'o4', customer:'cu4', products:[{pid:'p3',qty:3},{pid:'p5',qty:2}], amount:139.95, date:'2025-01-16', payment:'Paid', status:'Confirmed' },
+    { id:'o5', customer:'cu6', products:[{pid:'p10',qty:1}], amount:79.19, date:'2025-01-18', payment:'Paid', status:'Pending' },
+    { id:'o6', customer:'cu7', products:[{pid:'p7',qty:1},{pid:'p11',qty:1}], amount:99.98, date:'2025-01-20', payment:'Paid', status:'Delivered' },
+    { id:'o7', customer:'cu8', products:[{pid:'p12',qty:2}], amount:91.98, date:'2025-01-22', payment:'Paid', status:'Shipped' },
+    { id:'o8', customer:'cu9', products:[{pid:'p15',qty:1}], amount:59.49, date:'2025-01-24', payment:'Paid', status:'Cancelled' },
+    { id:'o9', customer:'cu10', products:[{pid:'p8',qty:1},{pid:'p14',qty:1}], amount:51.49, date:'2025-01-26', payment:'Paid', status:'Delivered' },
+    { id:'o10', customer:'cu1', products:[{pid:'p19',qty:2}], amount:53.98, date:'2025-01-28', payment:'Paid', status:'Pending' }
+  ]);
+  S.setList('orbitshop_cart', [{ pid:'p1', qty:1 }, { pid:'p5', qty:2 }, { pid:'p10', qty:1 }]);
+  S.setList('orbitshop_wishlist', [{ pid:'p2' }, { pid:'p4' }, { pid:'p16' }]);
+  S.setList('orbitshop_coupons', [
+    { id:'cp1', code:'SAVE10', discount:10, minAmount:50, expiry:'2025-06-30', status:'Active' },
+    { id:'cp2', code:'FLAT20', discount:20, minAmount:100, expiry:'2025-03-31', status:'Active' },
+    { id:'cp3', code:'WELCOME15', discount:15, minAmount:0, expiry:'2025-12-31', status:'Active' },
+    { id:'cp4', code:'EXPIRED5', discount:5, minAmount:25, expiry:'2024-12-31', status:'Inactive' }
+  ]);
+  S.setList('orbitshop_reviews', [
+    { id:'r1', customer:'James Wilson', product:'p1', rating:5, comment:'Amazing sound quality! Noise cancellation is top-notch.', date:'2025-01-15' },
+    { id:'r2', customer:'Sarah Chen', product:'p2', rating:4, comment:'Great smartwatch but battery could be better.', date:'2025-01-17' },
+    { id:'r3', customer:'Emily Davis', product:'p3', rating:5, comment:'Softest cotton tee I have ever worn.', date:'2025-01-20' },
+    { id:'r4', customer:'Robert Anderson', product:'p10', rating:4, comment:'Excellent keyboard for the price.', date:'2025-01-22' },
+    { id:'r5', customer:'Amanda Thomas', product:'p4', rating:3, comment:'Good shoes but sizing runs a bit small.', date:'2025-01-25' },
+    { id:'r6', customer:'Christopher Jackson', product:'p15', rating:2, comment:'Stopped working after 2 weeks.', date:'2025-01-27' },
+    { id:'r7', customer:'Ashley White', product:'p8', rating:5, comment:'Perfect yoga mat! Great grip.', date:'2025-01-29' }
+  ]);
+  S.setObj('orbitshop_settings', { storeName:'OrbitShop', storeEmail:'hello@orbitshop.demo', phone:'+1 (555) 000-1234', address:'100 Commerce Street, Suite 400, New York, NY 10001', currency:'$', tax:8, theme:'dark' });
+  S.setObj('orbitshop_profile', { name:'Admin', email:'admin@orbitshop.demo', phone:'+1 (555) 000-0001', image:'' });
+}
+
+/* ===== DASHBOARD ===== */
+var ModDashboard = {
+  _charts: [],
+  charts: function() {
+    var self = this;
+    this._charts.forEach(function(c) { c.destroy() }); this._charts = [];
+    var orders = S.getList('orbitshop_orders'), prods = S.getList('orbitshop_products');
+    var completed = orders.filter(function(o) { return o.status === 'Delivered' });
+    var revenue = completed.reduce(function(s, o) { return s + o.amount }, 0);
+    var ctx1 = document.getElementById('salesChart');
+    if (ctx1) { self._charts.push(new Chart(ctx1, { type:'line', data:{ labels:['Jan','Feb','Mar','Apr','May','Jun'], datasets:[{ label:'Revenue', data:[4200,5800,4900,6700,5400,revenue], borderColor:'#2563EB', backgroundColor:'rgba(37,99,235,.08)', fill:true, tension:.4, pointBackgroundColor:'#2563EB', pointRadius:4 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:11}}}, y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:11},callback:function(v){return'$'+v}}} } } })) }
+    var ctx2 = document.getElementById('topProductsChart');
+    if (ctx2) { var topP = prods.slice().sort(function(a,b){return b.price-a.price}).slice(0,5); self._charts.push(new Chart(ctx2, { type:'bar', data:{ labels:topP.map(function(p){return p.name.length>15?p.name.slice(0,15)+'...':p.name}), datasets:[{data:topP.map(function(p){return p.price}),backgroundColor:['#2563EB','#3B82F6','#60A5FA','#93C5FD','#BFDBFE'],borderRadius:6,barPercentage:.6}] }, options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.3)',font:{size:11},callback:function(v){return'$'+v}}}, y:{grid:{display:false},ticks:{color:'rgba(255,255,255,.5)',font:{size:11}}} } } })) }
+    var ctx3 = document.getElementById('orderStatusChart');
+    if (ctx3) { var sc = {}; orders.forEach(function(o){ sc[o.status]=(sc[o.status]||0)+1 }); self._charts.push(new Chart(ctx3, { type:'doughnut', data:{ labels:Object.keys(sc), datasets:[{data:Object.values(sc),backgroundColor:['#FBBF24','#3B82F6','#8B5CF6','#06B6D4','#10B981','#EF4444'],borderWidth:0,borderRadius:3}] }, options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.5)',padding:14,usePointStyle:true,pointStyleWidth:8,font:{size:11}}}} } })) }
+  },
+  render: function() {
+    var prods = S.getList('orbitshop_products'), orders = S.getList('orbitshop_orders'), custs = S.getList('orbitshop_customers'), cats = S.getList('orbitshop_categories');
+    var pending = orders.filter(function(o){return o.status==='Pending'}).length;
+    var completed = orders.filter(function(o){return o.status==='Delivered'});
+    var revenue = completed.reduce(function(s,o){return s+o.amount},0);
+    var stats = [
+      {label:'Total Products',value:prods.length,icon:'package',color:'bg-blue-500/10 text-blue-400'},
+      {label:'Total Categories',value:cats.length,icon:'grid-3x3',color:'bg-purple-500/10 text-purple-400'},
+      {label:'Total Customers',value:custs.length,icon:'users',color:'bg-green-500/10 text-green-400'},
+      {label:'Total Orders',value:orders.length,icon:'shopping-bag',color:'bg-cyan-500/10 text-cyan-400'},
+      {label:'Pending Orders',value:pending,icon:'clock',color:'bg-yellow-500/10 text-yellow-400'},
+      {label:'Completed Orders',value:completed.length,icon:'check-circle',color:'bg-emerald-500/10 text-emerald-400'},
+      {label:"Today's Revenue",value:U.fmtMoney(revenue),icon:'trending-up',color:'bg-blue-500/10 text-blue-400'},
+      {label:'Monthly Revenue',value:U.fmtMoney(revenue*1.3),icon:'bar-chart-3',color:'bg-indigo-500/10 text-indigo-400'}
+    ];
+    var recentOrders = orders.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date)}).slice(0,5);
+    var recentCustomers = custs.slice(-5).reverse();
+    return '<div class="mb-6"><h1 class="text-2xl font-extrabold">Dashboard</h1><p class="text-sm mt-1" style="color:rgba(255,255,255,.35)">Welcome back, ' + Auth.user().name + '. Here\'s your store overview.</p></div>'
+    + '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' + stats.map(function(s){return '<div class="stat-card"><div class="flex items-center justify-between mb-3"><p class="text-[11px] font-semibold uppercase tracking-wider" style="color:rgba(255,255,255,.35)">'+s.label+'</p><div class="icon-box '+s.color+'"><i data-lucide="'+s.icon+'" class="w-[18px] h-[18px]"></i></div></div><p class="text-2xl font-extrabold">'+s.value+'</p></div>'}).join('') + '</div>'
+    + '<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6"><div class="glass-card lg:col-span-2"><div class="p-5 pb-0"><h3 class="text-sm font-bold mb-4">Sales Overview</h3></div><div class="px-5 pb-5" style="height:260px"><canvas id="salesChart"></canvas></div></div><div class="glass-card"><div class="p-5 pb-0"><h3 class="text-sm font-bold mb-4">Order Status</h3></div><div class="px-5 pb-5" style="height:260px"><canvas id="orderStatusChart"></canvas></div></div></div>'
+    + '<div class="glass-card mb-6"><div class="p-5 pb-0"><h3 class="text-sm font-bold mb-4">Top Products by Price</h3></div><div class="px-5 pb-5" style="height:220px"><canvas id="topProductsChart"></canvas></div></div>'
+    + '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">'
+    + '<div class="glass-card"><div class="p-5 pb-3 flex items-center justify-between"><h3 class="text-sm font-bold">Recent Orders</h3><button class="text-xs text-accent-light hover:underline cursor-pointer" data-nav="orders">View All</button></div><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead><tbody>' + recentOrders.map(function(o){ var cu=S.find('orbitshop_customers',o.customer); var sc={'Pending':'badge-yellow','Confirmed':'badge-blue','Packed':'badge-blue','Shipped':'badge-blue','Delivered':'badge-green','Cancelled':'badge-red'}; return '<tr><td class="font-semibold text-xs">#'+o.id.toUpperCase()+'</td><td>'+(cu?cu.name:'-')+'</td><td class="font-semibold">'+U.fmtMoney(o.amount)+'</td><td><span class="badge '+(sc[o.status]||'badge-gray')+'">'+o.status+'</span></td></tr>' }).join('') + '</tbody></table></div></div>'
+    + '<div class="glass-card"><div class="p-5 pb-3 flex items-center justify-between"><h3 class="text-sm font-bold">Recent Customers</h3><button class="text-xs text-accent-light hover:underline cursor-pointer" data-nav="customers">View All</button></div><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Customer</th><th>Email</th><th>City</th><th>Status</th></tr></thead><tbody>' + recentCustomers.map(function(c){ return '<tr><td class="font-semibold">'+c.name+'</td><td class="text-xs" style="color:rgba(255,255,255,.4)">'+c.email+'</td><td>'+c.city+'</td><td><span class="badge '+(c.status==='Active'?'badge-green':'badge-gray')+'">'+c.status+'</span></td></tr>' }).join('') + '</tbody></table></div></div></div>';
+  }
+};
+
+/* ===== PRODUCTS ===== */
+var ModProducts = {
+  _search:'', _cat:'', _sort:'created', _dir:'desc',
+  fields: function() {
+    var cats = S.getList('orbitshop_categories');
+    return [
+      {key:'name',label:'Product Name'},{key:'category',label:'Category',type:'select',options:cats.map(function(c){return{value:c.id,label:c.name}})},
+      {key:'brand',label:'Brand'},{key:'price',label:'Price',type:'number',step:'0.01'},{key:'discount',label:'Discount %',type:'number',step:'1'},
+      {key:'stock',label:'Stock',type:'number'},{key:'sku',label:'SKU'},{key:'description',label:'Description',type:'textarea'},
+      {key:'image',label:'Image URL'},{key:'status',label:'Status',type:'select',options:[{value:'Active',label:'Active'},{value:'Inactive',label:'Inactive'}]}
+    ];
+  },
+  render: function() {
+    var cats = S.getList('orbitshop_categories');
+    var t = crudTable({
+      key:'products', data:S.getList('orbitshop_products'), page:currentPage.products||1, perPage:8,
+      search:this._search, sortKey:this._sort, sortDir:this._dir,
+      filterFn: this._cat ? function(r){return r.category===ModProducts._cat} : null,
+      emptyIcon:'package', emptyText:'No products found',
+      columns:[
+        {key:'image',label:'Image',render:function(v){return '<img src="'+(v||U.img('default',80,80))+'" class="avatar avatar-sm" loading="lazy">'}},
+        {key:'name',label:'Product',sortable:true,render:function(v,r){return '<div class="font-semibold">'+v+'</div><div class="text-xs" style="color:rgba(255,255,255,.35)">'+r.sku+'</div>'}},
+        {key:'category',label:'Category',render:function(v){return cats.find(function(c){return c.id===v})?.name||v}},
+        {key:'price',label:'Price',sortable:true,render:function(v,r){var fp=r.discount?v*(1-r.discount/100):v; return r.discount?'<span class="line-through text-xs mr-1" style="color:rgba(255,255,255,.25)">'+U.fmtMoney(v)+'</span><span class="font-semibold">'+U.fmtMoney(fp)+'</span>':'<span class="font-semibold">'+U.fmtMoney(v)+'</span>'}},
+        {key:'stock',label:'Stock',sortable:true,render:function(v){return '<span class="'+(v<50?'text-red-400':'')+' font-semibold">'+v+'</span>'}},
+        {key:'status',label:'Status',render:function(v){return '<span class="badge '+(v==='Active'?'badge-green':'badge-gray')+'">'+v+'</span>'}},
+        {key:'created',label:'Created',sortable:true,render:function(v){return U.fmtDate(v)}}
+      ],
+      actions: function(r){return '<button class="btn btn-xs btn-ghost" data-action="editProduct" data-id="'+r.id+'"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="btn btn-xs btn-ghost text-red-400 hover:!text-red-300" data-action="deleteProduct" data-id="'+r.id+'"><i data-lucide="trash-2" class="w-3 h-3"></i></button>'}
+    });
+    return '<div class="flex items-center justify-between mb-6 flex-wrap gap-3"><h1 class="text-2xl font-extrabold">Products</h1><button class="btn btn-primary" data-action="addProduct"><i data-lucide="plus" class="w-4 h-4"></i>Add Product</button></div>'
+    + '<div class="flex items-center gap-3 mb-5 flex-wrap"><input type="text" class="form-control" style="width:220px;height:38px" placeholder="Search products..." value="'+this._search+'" id="prodSearch">'
+    + '<select class="form-control" style="width:180px;height:38px" id="prodCatFilter"><option value="">All Categories</option>' + cats.map(function(c){return '<option value="'+c.id+'" '+(ModProducts._cat===c.id?'selected':'')+'>'+c.name+'</option>'}).join('') + '</select></div>'
+    + t.html;
+  }
+};
+
+/* ===== CATEGORIES ===== */
+var ModCategories = {
+  fields: [{key:'name',label:'Category Name'},{key:'description',label:'Description',type:'textarea'},{key:'status',label:'Status',type:'select',options:[{value:'Active',label:'Active'},{value:'Inactive',label:'Inactive'}]}],
+  render: function() {
+    var prods = S.getList('orbitshop_products');
+    var t = crudTable({
+      key:'categories', data:S.getList('orbitshop_categories'), page:currentPage.categories||1, perPage:10,
+      emptyIcon:'grid-3x3', emptyText:'No categories found',
+      columns:[
+        {key:'name',label:'Name',render:function(v,r){return '<div class="font-semibold">'+v+'</div><div class="text-xs" style="color:rgba(255,255,255,.35)">'+r.id.toUpperCase()+'</div>'}},
+        {key:'description',label:'Description'},
+        {key:'status',label:'Status',render:function(v){return '<span class="badge '+(v==='Active'?'badge-green':'badge-gray')+'">'+v+'</span>'}},
+        {key:'_count',label:'Products',render:function(v,r){return '<span class="font-semibold">'+prods.filter(function(p){return p.category===r.id}).length+'</span>'}}
+      ],
+      actions: function(r){return '<button class="btn btn-xs btn-ghost" data-action="editCategory" data-id="'+r.id+'"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="btn btn-xs btn-ghost text-red-400 hover:!text-red-300" data-action="deleteCategory" data-id="'+r.id+'"><i data-lucide="trash-2" class="w-3 h-3"></i></button>'}
+    });
+    return '<div class="flex items-center justify-between mb-6"><h1 class="text-2xl font-extrabold">Categories</h1><button class="btn btn-primary" data-action="addCategory"><i data-lucide="plus" class="w-4 h-4"></i>Add Category</button></div>' + t.html;
+  }
+};
+
+/* ===== CUSTOMERS ===== */
+var ModCustomers = {
+  _search:'',
+  fields: [{key:'name',label:'Full Name'},{key:'email',label:'Email',type:'email'},{key:'phone',label:'Phone'},{key:'address',label:'Address'},{key:'city',label:'City'},{key:'state',label:'State'},{key:'country',label:'Country'},{key:'status',label:'Status',type:'select',options:[{value:'Active',label:'Active'},{value:'Inactive',label:'Inactive'}]}],
+  render: function() {
+    var t = crudTable({
+      key:'customers', data:S.getList('orbitshop_customers'), page:currentPage.customers||1, perPage:8, search:this._search,
+      emptyIcon:'users', emptyText:'No customers found',
+      columns:[
+        {key:'name',label:'Name',render:function(v,r){return '<div class="flex items-center gap-3"><img src="'+U.img(r.id,40,40)+'" class="avatar avatar-sm"><div><div class="font-semibold">'+v+'</div><div class="text-xs" style="color:rgba(255,255,255,.35)">'+r.id.toUpperCase()+'</div></div></div>'}},
+        {key:'email',label:'Email'},{key:'phone',label:'Phone'},{key:'city',label:'City'},{key:'state',label:'State'},
+        {key:'status',label:'Status',render:function(v){return '<span class="badge '+(v==='Active'?'badge-green':'badge-gray')+'">'+v+'</span>'}},
+        {key:'created',label:'Joined',render:function(v){return U.fmtDate(v)}}
+      ],
+      actions: function(r){return '<button class="btn btn-xs btn-ghost" data-action="editCustomer" data-id="'+r.id+'"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="btn btn-xs btn-ghost text-red-400 hover:!text-red-300" data-action="deleteCustomer" data-id="'+r.id+'"><i data-lucide="trash-2" class="w-3 h-3"></i></button>'}
+    });
+    return '<div class="flex items-center justify-between mb-6"><h1 class="text-2xl font-extrabold">Customers</h1><button class="btn btn-primary" data-action="addCustomer"><i data-lucide="plus" class="w-4 h-4"></i>Add Customer</button></div>'
+    + '<div class="mb-5"><input type="text" class="form-control" style="width:260px;height:38px" placeholder="Search customers..." value="'+this._search+'" id="custSearch"></div>' + t.html;
+  }
+};
+
+/* ===== ORDERS ===== */
+var ModOrders = {
+  _search:'', _statusFilter:'',
+  render: function() {
+    var orders = S.getList('orbitshop_orders'), custs = S.getList('orbitshop_customers'), prods = S.getList('orbitshop_products');
+    var data = this._statusFilter ? orders.filter(function(o){return o.status===ModOrders._statusFilter}) : orders;
+    var t = crudTable({
+      key:'orders', data:data, page:currentPage.orders||1, perPage:8, search:this._search,
+      emptyIcon:'shopping-bag', emptyText:'No orders found',
+      columns:[
+        {key:'id',label:'Order ID',render:function(v){return '<span class="font-bold text-accent-light">#'+v.toUpperCase()+'</span>'}},
+        {key:'customer',label:'Customer',render:function(v){var c=custs.find(function(x){return x.id===v});return c?c.name:v}},
+        {key:'_products',label:'Products',render:function(v,r){return r.products.map(function(p){var pr=prods.find(function(x){return x.id===p.pid});return pr?pr.name:p.pid}).join(', ')}},
+        {key:'amount',label:'Amount',render:function(v){return '<span class="font-bold">'+U.fmtMoney(v)+'</span>'}},
+        {key:'date',label:'Date',render:function(v){return U.fmtDate(v)}},
+        {key:'payment',label:'Payment',render:function(v){return '<span class="badge '+(v==='Paid'?'badge-green':'badge-red')+'">'+v+'</span>'}},
+        {key:'status',label:'Status',render:function(v){var c={'Pending':'badge-yellow','Confirmed':'badge-blue','Packed':'badge-blue','Shipped':'badge-blue','Delivered':'badge-green','Cancelled':'badge-red'};return '<span class="badge '+(c[v]||'badge-gray')+'">'+v+'</span>'}}
+      ],
+      actions: function(r){return '<button class="btn btn-xs btn-ghost" data-action="viewOrder" data-id="'+r.id+'"><i data-lucide="eye" class="w-3 h-3"></i></button><button class="btn btn-xs btn-ghost" data-action="editOrder" data-id="'+r.id+'"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="btn btn-xs btn-ghost" data-action="printInvoice" data-id="'+r.id+'"><i data-lucide="printer" class="w-3 h-3"></i></button>'}
+    });
+    var statuses = ['Pending','Confirmed','Packed','Shipped','Delivered','Cancelled'];
+    return '<div class="flex items-center justify-between mb-6"><h1 class="text-2xl font-extrabold">Orders</h1><button class="btn btn-primary" data-action="addOrder"><i data-lucide="plus" class="w-4 h-4"></i>Create Order</button></div>'
+    + '<div class="flex items-center gap-3 mb-5 flex-wrap"><input type="text" class="form-control" style="width:220px;height:38px" placeholder="Search orders..." value="'+this._search+'" id="orderSearch">'
+    + '<select class="form-control" style="width:160px;height:38px" id="orderStatusFilter"><option value="">All Status</option>' + statuses.map(function(s){return '<option value="'+s+'" '+(ModOrders._statusFilter===s?'selected':'')+'>'+s+'</option>'}).join('') + '</select></div>' + t.html;
+  }
+};
+
+/* ===== CART ===== */
+var ModCart = { _coupon:null, _couponError:'',
+  render: function() {
+    var cart = S.getList('orbitshop_cart'), prods = S.getList('orbitshop_products'), settings = S.getObj('orbitshop_settings');
+    var subtotal = 0, discountAmt = 0;
+    var items = cart.map(function(ci){ var p=prods.find(function(x){return x.id===ci.pid}); if(!p) return null; var fp=p.discount?p.price*(1-p.discount/100):p.price; var line=fp*ci.qty; subtotal+=line; return {pid:ci.pid,qty:ci.qty,product:p,finalPrice:fp,lineTotal:line} }).filter(Boolean);
+    if(this._coupon){var cp=S.getList('orbitshop_coupons').find(function(c){return c.code===ModCart._coupon&&c.status==='Active'}); if(cp&&subtotal>=cp.minAmount) discountAmt=subtotal*cp.discount/100; else{this._coupon=null;this._couponError='Invalid or expired coupon'}}
+    var tax=(subtotal-discountAmt)*(settings.tax||0)/100, total=subtotal-discountAmt+tax;
+    if(!items.length) return '<div class="mb-6"><h1 class="text-2xl font-extrabold">Shopping Cart</h1></div><div class="glass-card"><div class="empty-state py-20"><i data-lucide="shopping-cart" class="w-16 h-16"></i><p class="text-base mt-2">Your cart is empty</p><button class="btn btn-primary mt-4" data-nav="products">Browse Products</button></div></div>';
+    return '<div class="mb-6"><h1 class="text-2xl font-extrabold">Shopping Cart</h1><p class="text-sm mt-1" style="color:rgba(255,255,255,.35)">'+items.length+' item'+(items.length!==1?'s':'')+' in cart</p></div>'
+    + '<div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2"><div class="glass-card"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead><tbody>'
+    + items.map(function(ci){return '<tr><td><div class="flex items-center gap-3"><img src="'+(ci.product.image||U.img(ci.product.id,60,60))+'" class="avatar avatar-sm"><div><div class="font-semibold text-sm">'+ci.product.name+'</div><div class="text-xs" style="color:rgba(255,255,255,.35)">'+ci.product.brand+'</div></div></div></td><td class="font-semibold">'+U.fmtMoney(ci.finalPrice)+'</td><td><div class="flex items-center gap-2"><button class="btn btn-xs btn-ghost" data-action="cartDec" data-pid="'+ci.pid+'"><i data-lucide="minus" class="w-3 h-3"></i></button><span class="font-semibold text-sm w-6 text-center">'+ci.qty+'</span><button class="btn btn-xs btn-ghost" data-action="cartInc" data-pid="'+ci.pid+'"><i data-lucide="plus" class="w-3 h-3"></i></button></div></td><td class="font-bold">'+U.fmtMoney(ci.lineTotal)+'</td><td><button class="btn btn-xs btn-ghost text-red-400" data-action="cartRemove" data-pid="'+ci.pid+'"><i data-lucide="trash-2" class="w-3 h-3"></i></button></td></tr>'}).join('')
+    + '</tbody></table></div></div></div>'
+    + '<div><div class="glass-card p-5 mb-4"><h3 class="text-sm font-bold mb-4">Order Summary</h3><div class="space-y-3 text-sm"><div class="flex justify-between"><span style="color:rgba(255,255,255,.5)">Subtotal</span><span class="font-semibold">'+U.fmtMoney(subtotal)+'</span></div>'
+    + (discountAmt?'<div class="flex justify-between text-green-400"><span>Discount ('+this._coupon+')</span><span>-'+U.fmtMoney(discountAmt)+'</span></div>':'')
+    + '<div class="flex justify-between"><span style="color:rgba(255,255,255,.5)">Tax ('+(settings.tax||0)+'%)</span><span class="font-semibold">'+U.fmtMoney(tax)+'</span></div>'
+    + '<div class="border-t border-white/[.06] pt-3 flex justify-between"><span class="font-bold">Total</span><span class="text-lg font-extrabold text-accent-light">'+U.fmtMoney(total)+'</span></div></div></div>'
+    + '<div class="glass-card p-5 mb-4"><div class="flex gap-2"><input type="text" class="form-control" style="height:38px" placeholder="Coupon code" id="couponInput" value="'+(this._coupon||'')+'"><button class="btn btn-ghost" style="height:38px" data-action="applyCoupon">Apply</button></div>'
+    + (this._couponError?'<p class="text-red-400 text-xs mt-2">'+this._couponError+'</p>':'')
+    + '</div><button class="btn btn-primary w-full justify-center" data-action="placeOrder"><i data-lucide="credit-card" class="w-4 h-4"></i>Place Order</button><button class="btn btn-ghost w-full justify-center mt-2" data-action="clearCart">Clear Cart</button></div></div>';
+  }
+};
+
+/* ===== WISHLIST ===== */
+var ModWishlist = {
+  render: function() {
+    var wl = S.getList('orbitshop_wishlist'), prods = S.getList('orbitshop_products');
+    var items = wl.map(function(wi){var p=prods.find(function(x){return x.id===wi.pid});return p?{pid:wi.pid,product:p}:null}).filter(Boolean);
+    if(!items.length) return '<div class="mb-6"><h1 class="text-2xl font-extrabold">Wishlist</h1></div><div class="glass-card"><div class="empty-state py-20"><i data-lucide="heart" class="w-16 h-16"></i><p class="text-base mt-2">Your wishlist is empty</p><button class="btn btn-primary mt-4" data-nav="products">Browse Products</button></div></div>';
+    return '<div class="mb-6"><h1 class="text-2xl font-extrabold">Wishlist</h1><p class="text-sm mt-1" style="color:rgba(255,255,255,.35)">'+items.length+' item'+(items.length!==1?'s':'')+' saved</p></div>'
+    + '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">'
+    + items.map(function(wi){var p=wi.product;var fp=p.discount?p.price*(1-p.discount/100):p.price;
+    return '<div class="glass-card"><div class="relative"><img src="'+(p.image||U.img(p.id))+'" class="w-full h-44 object-cover" loading="lazy">'
+    + (p.discount?'<span class="absolute top-3 left-3 badge badge-red">-'+p.discount+'%</span>':'')
+    + '<button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-red-400 hover:text-red-300 transition" data-action="removeWishlist" data-pid="'+p.id+'"><i data-lucide="x" class="w-4 h-4"></i></button></div>'
+    + '<div class="p-4"><h4 class="font-semibold text-sm mb-1">'+p.name+'</h4><p class="text-xs mb-3" style="color:rgba(255,255,255,.35)">'+p.brand+'</p>'
+    + '<div class="flex items-center justify-between"><div>'+(p.discount?'<span class="line-through text-xs mr-1" style="color:rgba(255,255,255,.25)">'+U.fmtMoney(p.price)+'</span>':'')+'<span class="font-bold text-accent-light">'+U.fmtMoney(fp)+'</span></div>'
+    + '<button class="btn btn-xs btn-primary" data-action="moveToCart" data-pid="'+p.id+'"><i data-lucide="shopping-cart" class="w-3 h-3"></i>Add to Cart</button></div></div></div>'}).join('') + '</div>';
+  }
+};
+
+/* ===== COUPONS ===== */
+var ModCoupons = {
+  fields: [{key:'code',label:'Coupon Code'},{key:'discount',label:'Discount %',type:'number',step:'1'},{key:'minAmount',label:'Minimum Amount',type:'number',step:'0.01'},{key:'expiry',label:'Expiry Date',type:'date'},{key:'status',label:'Status',type:'select',options:[{value:'Active',label:'Active'},{value:'Inactive',label:'Inactive'}]}],
+  render: function() {
+    var t = crudTable({
+      key:'coupons', data:S.getList('orbitshop_coupons'), page:currentPage.coupons||1, perPage:10,
+      emptyIcon:'ticket', emptyText:'No coupons found',
+      columns:[
+        {key:'code',label:'Code',render:function(v){return '<span class="font-bold font-mono text-accent-light">'+v+'</span>'}},
+        {key:'discount',label:'Discount',render:function(v){return '<span class="font-bold text-green-400">'+v+'%</span>'}},
+        {key:'minAmount',label:'Min. Amount',render:function(v){return U.fmtMoney(v)}},
+        {key:'expiry',label:'Expiry',render:function(v){return '<span class="'+(new Date(v)<new Date()?'text-red-400':'')+'">'+U.fmtDate(v)+'</span>'}},
+        {key:'status',label:'Status',render:function(v){return '<span class="badge '+(v==='Active'?'badge-green':'badge-gray')+'">'+v+'</span>'}}
+      ],
+      actions: function(r){return '<button class="btn btn-xs btn-ghost" data-action="editCoupon" data-id="'+r.id+'"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="btn btn-xs btn-ghost text-red-400" data-action="deleteCoupon" data-id="'+r.id+'"><i data-lucide="trash-2" class="w-3 h-3"></i></button>'}
+    });
+    return '<div class="flex items-center justify-between mb-6"><h1 class="text-2xl font-extrabold">Coupons</h1><button class="btn btn-primary" data-action="addCoupon"><i data-lucide="plus" class="w-4 h-4"></i>Add Coupon</button></div>' + t.html;
+  }
+};
+
+/* ===== REVIEWS ===== */
+var ModReviews = {
+  render: function() {
+    var reviews = S.getList('orbitshop_reviews'), prods = S.getList('orbitshop_products');
+    var avg = reviews.length ? (reviews.reduce(function(s,r){return s+r.rating},0)/reviews.length).toFixed(1) : '0';
+    var dist = [5,4,3,2,1].map(function(star){var c=reviews.filter(function(r){return r.rating===star}).length;return{star:star,count:c,pct:reviews.length?(c/reviews.length*100):0}});
+    var t = crudTable({
+      key:'reviews', data:reviews, page:currentPage.reviews||1, perPage:8,
+      emptyIcon:'star', emptyText:'No reviews found',
+      columns:[
+        {key:'customer',label:'Customer',render:function(v){return '<div class="font-semibold">'+v+'</div>'}},
+        {key:'product',label:'Product',render:function(v){var p=prods.find(function(x){return x.id===v});return p?p.name:v}},
+        {key:'rating',label:'Rating',render:function(v){return U.starsHTML(v)}},
+        {key:'comment',label:'Comment',render:function(v){return '<span class="text-xs" style="color:rgba(255,255,255,.5);max-width:250px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v+'</span>'}},
+        {key:'date',label:'Date',render:function(v){return U.fmtDate(v)}}
+      ],
+      actions: function(r){return '<button class="btn btn-xs btn-ghost" data-action="editReview" data-id="'+r.id+'"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="btn btn-xs btn-ghost text-red-400" data-action="deleteReview" data-id="'+r.id+'"><i data-lucide="trash-2" class="w-3 h-3"></i></button>'}
+    });
+    return '<div class="flex items-center justify-between mb-6"><h1 class="text-2xl font-extrabold">Reviews</h1><button class="btn btn-primary" data-action="addReview"><i data-lucide="plus" class="w-4 h-4"></i>Add Review</button></div>'
+    + '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="stat-card text-center"><div class="text-4xl font-extrabold text-accent-light mb-1">'+avg+'</div><div class="text-xs" style="color:rgba(255,255,255,.35)">Average Rating</div><div class="mt-2">'+U.starsHTML(Math.round(avg))+'</div></div>'
+    + '<div class="stat-card md:col-span-2"><div class="space-y-2">' + dist.map(function(d){return '<div class="flex items-center gap-3"><span class="text-xs font-semibold w-4">'+d.star+'</span><i data-lucide="star" class="w-3 h-3 text-yellow-400" style="fill:currentColor"></i><div class="flex-1 h-2 rounded-full" style="background:rgba(255,255,255,.06)"><div class="h-full rounded-full bg-accent transition-all" style="width:'+d.pct+'%"></div></div><span class="text-xs font-semibold w-8 text-right">'+d.count+'</span></div>'}).join('') + '</div></div></div>' + t.html;
+  }
+};
+
+/* ===== REPORTS ===== */
+var ModReports = { _tab:'sales',
+  render: function() {
+    var orders = S.getList('orbitshop_orders'), custs = S.getList('orbitshop_customers'), prods = S.getList('orbitshop_products');
+    var content = '';
+    if (this._tab === 'sales') {
+      var byStatus = {}; orders.forEach(function(o){byStatus[o.status]=(byStatus[o.status]||0)+1});
+      content = '<table class="data-table"><thead><tr><th>Status</th><th>Orders</th><th>% of Total</th></tr></thead><tbody>' + Object.entries(byStatus).map(function(e){return '<tr><td class="font-semibold">'+e[0]+'</td><td>'+e[1]+'</td><td>'+(e[1]/orders.length*100).toFixed(1)+'%</td></tr>'}).join('') + '<tr style="font-weight:700"><td>Total</td><td>'+orders.length+'</td><td>100%</td></tr></tbody></table>';
+    } else if (this._tab === 'revenue') {
+      var paid = orders.filter(function(o){return o.payment==='Paid'}); var total = paid.reduce(function(s,o){return s+o.amount},0); var refunded = orders.filter(function(o){return o.payment==='Refunded'}).reduce(function(s,o){return s+o.amount},0);
+      content = '<div class="grid grid-cols-3 gap-4 mb-5"><div class="stat-card"><p class="text-xs" style="color:rgba(255,255,255,.35)">Total Revenue</p><p class="text-2xl font-extrabold text-green-400 mt-1">'+U.fmtMoney(total)+'</p></div><div class="stat-card"><p class="text-xs" style="color:rgba(255,255,255,.35)">Refunded</p><p class="text-2xl font-extrabold text-red-400 mt-1">'+U.fmtMoney(refunded)+'</p></div><div class="stat-card"><p class="text-xs" style="color:rgba(255,255,255,.35)">Net Revenue</p><p class="text-2xl font-extrabold text-accent-light mt-1">'+U.fmtMoney(total-refunded)+'</p></div></div>'
+      + '<table class="data-table"><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Payment</th><th>Date</th></tr></thead><tbody>' + paid.map(function(o){var c=custs.find(function(x){return x.id===o.customer});return '<tr><td class="font-semibold">#'+o.id.toUpperCase()+'</td><td>'+(c?c.name:'-')+'</td><td class="font-semibold">'+U.fmtMoney(o.amount)+'</td><td><span class="badge badge-green">'+o.payment+'</span></td><td>'+U.fmtDate(o.date)+'</td></tr>'}).join('') + '</tbody></table>';
+    } else if (this._tab === 'products') {
+      var cats = S.getList('orbitshop_categories');
+      content = '<table class="data-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Discount</th><th>Status</th></tr></thead><tbody>' + prods.map(function(p){var cat=cats.find(function(c){return c.id===p.category});return '<tr><td class="font-semibold">'+p.name+'</td><td>'+(cat?cat.name:'-')+'</td><td>'+U.fmtMoney(p.price)+'</td><td class="'+(p.stock<50?'text-red-400 font-semibold':'')+'">'+p.stock+'</td><td>'+(p.discount?p.discount+'%':'-')+'</td><td><span class="badge '+(p.status==='Active'?'badge-green':'badge-gray')+'">'+p.status+'</span></td></tr>'}).join('') + '</tbody></table>';
+    } else {
+      var withOrders = custs.map(function(c){var co=orders.filter(function(o){return o.customer===c.id});return{name:c.name,email:c.email,city:c.city,orderCount:co.length,totalSpent:co.reduce(function(s,o){return s+o.amount},0)}}).sort(function(a,b){return b.totalSpent-a.totalSpent});
+      content = '<table class="data-table"><thead><tr><th>Customer</th><th>Email</th><th>City</th><th>Orders</th><th>Total Spent</th></tr></thead><tbody>' + withOrders.map(function(c){return '<tr><td class="font-semibold">'+c.name+'</td><td>'+c.email+'</td><td>'+c.city+'</td><td class="font-semibold">'+c.orderCount+'</td><td class="font-bold text-accent-light">'+U.fmtMoney(c.totalSpent)+'</td></tr>'}).join('') + '</tbody></table>';
+    }
+    return '<div class="flex items-center justify-between mb-6 flex-wrap gap-3"><h1 class="text-2xl font-extrabold">Reports</h1><div class="flex gap-2"><button class="btn btn-ghost btn-sm" data-action="exportCSV"><i data-lucide="download" class="w-3.5 h-3.5"></i>Export CSV</button><button class="btn btn-ghost btn-sm" data-action="printReport"><i data-lucide="printer" class="w-3.5 h-3.5"></i>Print</button></div></div>'
+    + '<div class="tab-bar"><button class="tab-btn '+(this._tab==='sales'?'active':'')+'" data-action="reportTab" data-tab="sales">Sales Report</button><button class="tab-btn '+(this._tab==='revenue'?'active':'')+'" data-action="reportTab" data-tab="revenue">Revenue Report</button><button class="tab-btn '+(this._tab==='products'?'active':'')+'" data-action="reportTab" data-tab="products">Product Report</button><button class="tab-btn '+(this._tab==='customers'?'active':'')+'" data-action="reportTab" data-tab="customers">Customer Report</button></div>'
+    + '<div class="glass-card" style="overflow-x:auto">' + content + '</div>';
+  }
+};
+
+/* ===== SETTINGS ===== */
+var ModSettings = {
+  render: function() {
+    var s = S.getObj('orbitshop_settings');
+    return '<div class="mb-6"><h1 class="text-2xl font-extrabold">Settings</h1></div>'
+    + '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">'
+    + '<div class="glass-card p-6"><h3 class="text-sm font-bold mb-5">Store Information</h3>'
+    + '<div class="form-group"><label>Store Name</label><input type="text" class="form-control" id="s_name" value="'+(s.storeName||'')+'"></div>'
+    + '<div class="form-row"><div class="form-group"><label>Store Email</label><input type="email" class="form-control" id="s_email" value="'+(s.storeEmail||'')+'"></div><div class="form-group"><label>Phone</label><input type="text" class="form-control" id="s_phone" value="'+(s.phone||'')+'"></div></div>'
+    + '<div class="form-group"><label>Address</label><textarea class="form-control" id="s_address">'+(s.address||'')+'</textarea></div>'
+    + '<div class="form-row"><div class="form-group"><label>Currency Symbol</label><input type="text" class="form-control" id="s_currency" value="'+(s.currency||'$')+'"></div><div class="form-group"><label>Tax Percentage</label><input type="number" class="form-control" id="s_tax" value="'+(s.tax||0)+'" step="0.1"></div></div>'
+    + '<button class="btn btn-primary" data-action="saveSettings"><i data-lucide="save" class="w-4 h-4"></i>Save Settings</button></div>'
+    + '<div><div class="glass-card p-6 mb-6"><h3 class="text-sm font-bold mb-4">Appearance</h3><div class="flex items-center justify-between py-2"><div><p class="text-sm font-semibold">Theme</p><p class="text-xs" style="color:rgba(255,255,255,.35)">Switch between dark and light mode</p></div><button class="btn btn-ghost btn-sm" data-action="toggleTheme"><i data-lucide="'+(document.documentElement.classList.contains('dark')?'sun':'moon')+'" class="w-4 h-4"></i>'+(document.documentElement.classList.contains('dark')?'Light Mode':'Dark Mode')+'</button></div></div>'
+    + '<div class="glass-card p-6"><h3 class="text-sm font-bold mb-2">Data Management</h3><p class="text-xs mb-5" style="color:rgba(255,255,255,.35)">Backup and restore all OrbitShop data stored in your browser.</p><div class="flex flex-wrap gap-3"><button class="btn btn-primary btn-sm" data-action="backupData"><i data-lucide="download" class="w-3.5 h-3.5"></i>Export Backup</button><button class="btn btn-ghost btn-sm" data-action="restoreData"><i data-lucide="upload" class="w-3.5 h-3.5"></i>Import Backup</button><button class="btn btn-danger btn-sm" data-action="clearAllData"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i>Clear All Data</button></div><input type="file" id="restoreFile" accept=".json" style="display:none"></div></div></div>';
+  }
+};
+
+/* ===== PROFILE ===== */
+var ModProfile = {
+  render: function() {
+    var p = S.getObj('orbitshop_profile');
+    return '<div class="mb-6"><h1 class="text-2xl font-extrabold">Profile</h1></div>'
+    + '<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">'
+    + '<div class="glass-card p-8 text-center"><img src="'+(p.image||U.img('adminprofile',120,120))+'" class="w-20 h-20 rounded-2xl mx-auto mb-4 object-cover border-2 border-white/10"><h3 class="text-lg font-bold">'+(p.name||'Admin')+'</h3><p class="text-sm" style="color:rgba(255,255,255,.4)">'+(p.email||'')+'</p><div class="mt-4 pt-4 border-t border-white/[.06]"><span class="badge badge-blue">Administrator</span></div></div>'
+    + '<div class="lg:col-span-2 space-y-6">'
+    + '<div class="glass-card p-6"><h3 class="text-sm font-bold mb-5">Update Profile</h3><div class="form-row"><div class="form-group"><label>Name</label><input type="text" class="form-control" id="p_name" value="'+(p.name||'')+'"></div><div class="form-group"><label>Email</label><input type="email" class="form-control" id="p_email" value="'+(p.email||'')+'"></div></div><div class="form-group"><label>Phone</label><input type="text" class="form-control" id="p_phone" value="'+(p.phone||'')+'"></div><div class="form-group"><label>Profile Image URL</label><input type="text" class="form-control" id="p_image" value="'+(p.image||'')+'" placeholder="https://..."></div><button class="btn btn-primary" data-action="saveProfile"><i data-lucide="save" class="w-4 h-4"></i>Update Profile</button></div>'
+    + '<div class="glass-card p-6"><h3 class="text-sm font-bold mb-5">Change Password</h3><div class="form-group"><label>Current Password</label><input type="password" class="form-control" id="p_curpw" placeholder="Enter current password"></div><div class="form-row"><div class="form-group"><label>New Password</label><input type="password" class="form-control" id="p_newpw" placeholder="Enter new password"></div><div class="form-group"><label>Confirm Password</label><input type="password" class="form-control" id="p_confpw" placeholder="Confirm password"></div></div><button class="btn btn-primary" data-action="changePassword"><i data-lucide="lock" class="w-4 h-4"></i>Change Password</button></div></div></div>';
+  }
+};
+
+/* ===== EVENT HANDLERS ===== */
+document.getElementById('loginBtn').addEventListener('click', function() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var pw = document.getElementById('loginPassword').value;
+  if (Auth.login(email, pw)) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').classList.add('active');
+    seedData(); buildNav(); renderModule();
+  } else {
+    document.getElementById('loginError').classList.remove('hidden');
+    setTimeout(function() { document.getElementById('loginError').classList.add('hidden') }, 3000);
+  }
+});
+document.getElementById('loginPassword').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('loginBtn').click() });
+
+document.getElementById('sideNav').addEventListener('click', function(e) {
+  var item = e.target.closest('[data-nav]');
+  if (item) {
+    if (item.dataset.nav === 'logout') { UI.confirm('Are you sure you want to logout?', function() { Auth.logout() }); return }
+    navigate(item.dataset.nav);
+  }
+});
+document.getElementById('sidebarOverlay').addEventListener('click', function() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show') });
+document.getElementById('menuToggle').addEventListener('click', function() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('show') });
+document.querySelector('[data-nav="profile"]').addEventListener('click', function() { navigate('profile') });
+document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === e.currentTarget) UI.closeModal() });
+
+/* Main content delegation */
+document.getElementById('mainContent').addEventListener('click', handleMainClick);
+document.getElementById('mainContent').addEventListener('change', handleMainChange);
+document.getElementById('mainContent').addEventListener('input', handleMainInput);
+
+var _searchTimers = {};
+function handleMainInput(e) {
+  if (e.target.id === 'prodSearch') { clearTimeout(_searchTimers.prodSearch); _searchTimers.prodSearch = setTimeout(function() { ModProducts._search = e.target.value; currentPage.products = 1; renderModule() }, 300) }
+  if (e.target.id === 'custSearch') { clearTimeout(_searchTimers.custSearch); _searchTimers.custSearch = setTimeout(function() { ModCustomers._search = e.target.value; currentPage.customers = 1; renderModule() }, 300) }
+  if (e.target.id === 'orderSearch') { clearTimeout(_searchTimers.orderSearch); _searchTimers.orderSearch = setTimeout(function() { ModOrders._search = e.target.value; currentPage.orders = 1; renderModule() }, 300) }
+}
+
+function handleMainChange(e) {
+  if (e.target.id === 'prodCatFilter') { ModProducts._cat = e.target.value; currentPage.products = 1; renderModule() }
+  if (e.target.id === 'orderStatusFilter') { ModOrders._statusFilter = e.target.value; currentPage.orders = 1; renderModule() }
+}
+
+function handleMainClick(e) {
+  var pageBtn = e.target.closest('[data-page]');
+  if (pageBtn) { var p = +pageBtn.dataset.page; if (p >= 1) { currentPage[currentModule] = p; renderModule() } return }
+  var sortTh = e.target.closest('[data-sort]');
+  if (sortTh) {
+    var key = sortTh.dataset.sort;
+    var mods = { products: ModProducts, orders: ModOrders };
+    var m = mods[currentModule]; if (!m) return;
+    if (m._sort === key) m._dir = m._dir === 'asc' ? 'desc' : 'asc'; else { m._sort = key; m._dir = 'asc' }
+    renderModule(); return;
+  }
+  var navLink = e.target.closest('[data-nav]');
+  if (navLink) { navigate(navLink.dataset.nav); return }
+  var btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  var action = btn.dataset.action, id = btn.dataset.id, pid = btn.dataset.pid, tab = btn.dataset.tab;
+
+  if (action === 'addProduct') { crudForm({title:'Add Product',fields:ModProducts.fields(),saveLabel:'Add Product',onSave:function(d){d.id='p'+U.uid();d.created=U.today();S.add('orbitshop_products',d);UI.toast('Product added');renderModule()}}) }
+  else if (action === 'editProduct') { var p=S.find('orbitshop_products',id); if(p) crudForm({title:'Edit Product',fields:ModProducts.fields(),data:p,saveLabel:'Update',onSave:function(d){S.update('orbitshop_products',id,d);UI.toast('Product updated');renderModule()}}) }
+  else if (action === 'deleteProduct') { UI.confirm('Delete this product?',function(){S.remove('orbitshop_products',id);UI.toast('Product deleted','info');renderModule()}) }
+  else if (action === 'addCategory') { crudForm({title:'Add Category',fields:ModCategories.fields,saveLabel:'Add Category',onSave:function(d){d.id='c'+U.uid();d.created=U.today();S.add('orbitshop_categories',d);UI.toast('Category added');renderModule()}}) }
+  else if (action === 'editCategory') { var c=S.find('orbitshop_categories',id); if(c) crudForm({title:'Edit Category',fields:ModCategories.fields,data:c,saveLabel:'Update',onSave:function(d){S.update('orbitshop_categories',id,d);UI.toast('Category updated');renderModule()}}) }
+  else if (action === 'deleteCategory') { UI.confirm('Delete this category?',function(){S.remove('orbitshop_categories',id);UI.toast('Category deleted','info');renderModule()}) }
+  else if (action === 'addCustomer') { crudForm({title:'Add Customer',fields:ModCustomers.fields,saveLabel:'Add Customer',onSave:function(d){d.id='cu'+U.uid();d.created=U.today();S.add('orbitshop_customers',d);UI.toast('Customer added');renderModule()}}) }
+  else if (action === 'editCustomer') { var c=S.find('orbitshop_customers',id); if(c) crudForm({title:'Edit Customer',fields:ModCustomers.fields,data:c,saveLabel:'Update',onSave:function(d){S.update('orbitshop_customers',id,d);UI.toast('Customer updated');renderModule()}}) }
+  else if (action === 'deleteCustomer') { UI.confirm('Delete this customer?',function(){S.remove('orbitshop_customers',id);UI.toast('Customer deleted','info');renderModule()}) }
+  else if (action === 'addOrder') {
+    var custs = S.getList('orbitshop_customers');
+    crudForm({title:'Create Order',fields:[
+      {key:'customer',label:'Customer',type:'select',options:custs.map(function(c){return{value:c.id,label:c.name}})},
+      {key:'amount',label:'Amount',type:'number',step:'0.01',default:0},
+      {key:'payment',label:'Payment',type:'select',options:[{value:'Paid',label:'Paid'},{value:'Pending',label:'Pending'}]},
+      {key:'status',label:'Status',type:'select',options:[{value:'Pending',label:'Pending'},{value:'Confirmed',label:'Confirmed'},{value:'Packed',label:'Packed'},{value:'Shipped',label:'Shipped'},{value:'Delivered',label:'Delivered'}]}
+    ],saveLabel:'Create Order',onSave:function(d){d.id='o'+U.uid();d.products=[];d.date=U.today();S.add('orbitshop_orders',d);UI.toast('Order created');renderModule()}})
+  }
+  else if (action === 'editOrder') {
+    var o=S.find('orbitshop_orders',id); if(!o) return;
+    var custs=S.getList('orbitshop_customers');
+    crudForm({title:'Update Order #'+id.toUpperCase(),fields:[
+      {key:'customer',label:'Customer',type:'select',options:custs.map(function(c){return{value:c.id,label:c.name}})},
+      {key:'amount',label:'Amount',type:'number',step:'0.01'},
+      {key:'payment',label:'Payment',type:'select',options:[{value:'Paid',label:'Paid'},{value:'Refunded',label:'Refunded'}]},
+      {key:'status',label:'Status',type:'select',options:[{value:'Pending',label:'Pending'},{value:'Confirmed',label:'Confirmed'},{value:'Packed',label:'Packed'},{value:'Shipped',label:'Shipped'},{value:'Delivered',label:'Delivered'},{value:'Cancelled',label:'Cancelled'}]}
+    ],data:o,saveLabel:'Update Order',onSave:function(d){S.update('orbitshop_orders',id,d);UI.toast('Order updated');renderModule()}})
+  }
+  else if (action === 'viewOrder') {
+    var o=S.find('orbitshop_orders',id); if(!o) return;
+    var cu=S.find('orbitshop_customers',o.customer), prods=S.getList('orbitshop_products');
+    var steps=['Pending','Confirmed','Packed','Shipped','Delivered'], ci=steps.indexOf(o.status);
+    var prodHTML = '';
+    if(o.products.length) { prodHTML = '<p class="text-xs font-semibold mb-2" style="color:rgba(255,255,255,.35)">PRODUCTS</p>'; o.products.forEach(function(op){var p=prods.find(function(x){return x.id===op.pid}); if(p) prodHTML+='<div class="flex items-center gap-3 py-2 border-b border-white/[.04]"><img src="'+(p.image||U.img(p.id,40,40))+'" class="avatar avatar-sm"><div class="flex-1"><p class="text-sm font-semibold">'+p.name+'</p><p class="text-xs" style="color:rgba(255,255,255,.35)">Qty: '+op.qty+'</p></div><span class="text-sm font-bold">'+U.fmtMoney(p.price*op.qty)+'</span></div>'}); }
+    var timelineHTML = '';
+    if(o.status !== 'Cancelled') { timelineHTML = '<div><p class="text-xs font-semibold mb-4" style="color:rgba(255,255,255,.35)">ORDER TRACKING</p><div class="timeline">'; steps.forEach(function(s,i){ timelineHTML += '<div class="timeline-step"><div class="timeline-dot '+(i<=ci?'done':'pending')+'"><i data-lucide="'+(i<=ci?'check':'circle')+'" class="w-3 h-3"></i></div><div><p class="text-sm font-semibold" style="'+(i>ci?'color:rgba(255,255,255,.25)':'')+'">'+s+'</p></div></div>'; }); timelineHTML += '</div></div>'; }
+    else { timelineHTML = '<div class="badge badge-red text-sm py-2 px-4">Order Cancelled</div>'; }
+    UI.modal('<div class="p-6"><div class="flex items-center justify-between mb-6"><h3 class="text-lg font-bold">Order #'+id.toUpperCase()+'</h3><button onclick="UI.closeModal()" class="text-white/30 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>'
+    + '<div class="grid grid-cols-2 gap-4 mb-6 text-sm"><div><span style="color:rgba(255,255,255,.35)">Customer</span><p class="font-semibold mt-1">'+(cu?cu.name:'-')+'</p></div><div><span style="color:rgba(255,255,255,.35)">Date</span><p class="font-semibold mt-1">'+U.fmtDate(o.date)+'</p></div><div><span style="color:rgba(255,255,255,.35)">Amount</span><p class="font-semibold mt-1 text-accent-light">'+U.fmtMoney(o.amount)+'</p></div><div><span style="color:rgba(255,255,255,.35)">Payment</span><p class="mt-1"><span class="badge '+(o.payment==='Paid'?'badge-green':'badge-red')+'">'+o.payment+'</span></p></div></div>'
+    + prodHTML + timelineHTML + '</div>');
+  }
+  else if (action === 'printInvoice') {
+    var o=S.find('orbitshop_orders',id); if(!o) return;
+    var cu=S.find('orbitshop_customers',o.customer), prods=S.getList('orbitshop_products'), settings=S.getObj('orbitshop_settings');
+    var w=window.open('','_blank');
+    w.document.write('<!DOCTYPE html><html><head><title>Invoice #'+id.toUpperCase()+'</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,Arial,sans-serif;max-width:700px;margin:40px auto;padding:20px;color:#111}h1{font-size:20px;border-bottom:3px solid #2563EB;padding-bottom:10px;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin:20px 0}td,th{padding:10px 12px;border:1px solid #e5e7eb;text-align:left;font-size:13px}th{background:#f9fafb;font-size:11px;text-transform:uppercase;letter-spacing:.5px}.right{text-align:right}.total-row{font-weight:bold;font-size:15px;background:#f9fafb}</style></head><body><h1>'+(settings.storeName||'OrbitShop')+'</h1><p style="font-size:12px;color:#666;margin-bottom:20px">'+(settings.address||'')+'<br>'+(settings.storeEmail||'')+' | '+(settings.phone||'')+'</p><table><tr><th>Invoice</th><td class="right">#'+id.toUpperCase()+'</td><th>Date</th><td class="right">'+U.fmtDate(o.date)+'</td></tr><tr><th>Customer</th><td colspan="3">'+(cu?cu.name:'-')+'<br>'+(cu?cu.email:'')+'</td></tr></table><table><thead><tr><th>Product</th><th>Qty</th><th class="right">Price</th><th class="right">Total</th></tr></thead><tbody>'+o.products.map(function(op){var p=prods.find(function(x){return x.id===op.pid});return p?'<tr><td>'+p.name+'</td><td>'+op.qty+'</td><td class="right">'+U.fmtMoney(p.price)+'</td><td class="right">'+U.fmtMoney(p.price*op.qty)+'</td></tr>':''}).join('')+'</tbody></table><table><tr class="total-row"><td colspan="3" class="right">Total</td><td class="right">'+U.fmtMoney(o.amount)+'</td></tr><tr><td colspan="3" class="right">Payment</td><td class="right">'+o.payment+'</td></tr></table><p style="text-align:center;color:#999;font-size:11px;margin-top:40px">Thank you for your purchase!</p></body></html>');
+    w.document.close(); setTimeout(function(){w.print()},500);
+  }
+  else if (action === 'cartInc') { var cart=S.getList('orbitshop_cart'); var idx=cart.findIndex(function(c){return c.pid===pid}); if(idx>=0){cart[idx].qty++;S.setList('orbitshop_cart',cart);renderModule()} }
+  else if (action === 'cartDec') { var cart=S.getList('orbitshop_cart'); var idx=cart.findIndex(function(c){return c.pid===pid}); if(idx>=0){if(cart[idx].qty<=1)cart.splice(idx,1);else cart[idx].qty--;S.setList('orbitshop_cart',cart);renderModule()} }
+  else if (action === 'cartRemove') { S.setList('orbitshop_cart',S.getList('orbitshop_cart').filter(function(c){return c.pid!==pid})); UI.toast('Item removed','info'); renderModule() }
+  else if (action === 'clearCart') { UI.confirm('Clear all cart items?',function(){S.setList('orbitshop_cart',[]);ModCart._coupon=null;UI.toast('Cart cleared','info');renderModule()}) }
+  else if (action === 'applyCoupon') {
+    var code = (document.getElementById('couponInput')||{}).value; if(!code){ModCart._couponError='Enter a coupon code';renderModule();return}
+    code = code.trim().toUpperCase();
+    var cp=S.getList('orbitshop_coupons').find(function(c){return c.code===code&&c.status==='Active'});
+    if(!cp){ModCart._couponError='Invalid coupon code';ModCart._coupon=null;renderModule();return}
+    if(new Date(cp.expiry)<new Date()){ModCart._couponError='Coupon expired';ModCart._coupon=null;renderModule();return}
+    ModCart._coupon=code;ModCart._couponError='';UI.toast('Coupon '+code+' applied!');renderModule();
+  }
+  else if (action === 'placeOrder') {
+    var cart=S.getList('orbitshop_cart'); if(!cart.length){UI.toast('Cart is empty','error');return}
+    var prods=S.getList('orbitshop_products'), subtotal=0;
+    var items=cart.map(function(ci){var p=prods.find(function(x){return x.id===ci.pid});if(!p)return null;var fp=p.discount?p.price*(1-p.discount/100):p.price;subtotal+=fp*ci.qty;return{pid:ci.pid,qty:ci.qty}}).filter(Boolean);
+    var discount=0;if(ModCart._coupon){var cp=S.getList('orbitshop_coupons').find(function(c){return c.code===ModCart._coupon});if(cp&&subtotal>=cp.minAmount)discount=subtotal*cp.discount/100}
+    var settings=S.getObj('orbitshop_settings'),tax=(subtotal-discount)*(settings.tax||0)/100,total=subtotal-discount+tax;
+    S.add('orbitshop_orders',{id:'o'+U.uid(),customer:'cu1',products:items,amount:Math.round(total*100)/100,date:U.today(),payment:'Paid',status:'Pending'});
+    S.setList('orbitshop_cart',[]);ModCart._coupon=null;UI.toast('Order placed successfully!');navigate('orders');
+  }
+  else if (action === 'removeWishlist') { S.setList('orbitshop_wishlist',S.getList('orbitshop_wishlist').filter(function(w){return w.pid!==pid}));UI.toast('Removed from wishlist','info');renderModule() }
+  else if (action === 'moveToCart') { var cart=S.getList('orbitshop_cart');var idx=cart.findIndex(function(c){return c.pid===pid});if(idx>=0)cart[idx].qty++;else cart.push({pid:pid,qty:1});S.setList('orbitshop_cart',cart);S.setList('orbitshop_wishlist',S.getList('orbitshop_wishlist').filter(function(w){return w.pid!==pid}));UI.toast('Moved to cart');renderModule() }
+  else if (action === 'addCoupon') { crudForm({title:'Add Coupon',fields:ModCoupons.fields,saveLabel:'Add Coupon',onSave:function(d){d.id='cp'+U.uid();S.add('orbitshop_coupons',d);UI.toast('Coupon added');renderModule()}}) }
+  else if (action === 'editCoupon') { var c=S.find('orbitshop_coupons',id);if(c)crudForm({title:'Edit Coupon',fields:ModCoupons.fields,data:c,saveLabel:'Update',onSave:function(d){S.update('orbitshop_coupons',id,d);UI.toast('Coupon updated');renderModule()}}) }
+  else if (action === 'deleteCoupon') { UI.confirm('Delete this coupon?',function(){S.remove('orbitshop_coupons',id);UI.toast('Coupon deleted','info');renderModule()}) }
+  else if (action === 'addReview') {
+    var prods=S.getList('orbitshop_products'),custs=S.getList('orbitshop_customers');
+    crudForm({title:'Add Review',fields:[
+      {key:'customer',label:'Customer',type:'select',options:custs.map(function(c){return{value:c.name,label:c.name}})},
+      {key:'product',label:'Product',type:'select',options:prods.map(function(p){return{value:p.id,label:p.name}})},
+      {key:'rating',label:'Rating',type:'select',options:[1,2,3,4,5].map(function(r){return{value:r,label:r+' Star'+(r>1?'s':'')}})},
+      {key:'comment',label:'Comment',type:'textarea'}
+    ],saveLabel:'Add Review',onSave:function(d){d.id='r'+U.uid();d.date=U.today();S.add('orbitshop_reviews',d);UI.toast('Review added');renderModule()}})
+  }
+  else if (action === 'editReview') {
+    var r=S.find('orbitshop_reviews',id);if(!r) return;
+    var prods=S.getList('orbitshop_products'),custs=S.getList('orbitshop_customers');
+    crudForm({title:'Edit Review',fields:[
+      {key:'customer',label:'Customer',type:'select',options:custs.map(function(c){return{value:c.name,label:c.name}})},
+      {key:'product',label:'Product',type:'select',options:prods.map(function(p){return{value:p.id,label:p.name}})},
+      {key:'rating',label:'Rating',type:'select',options:[1,2,3,4,5].map(function(r){return{value:r,label:r+' Star'+(r>1?'s':'')}})},
+      {key:'comment',label:'Comment',type:'textarea'}
+    ],data:r,saveLabel:'Update',onSave:function(d){S.update('orbitshop_reviews',id,d);UI.toast('Review updated');renderModule()}})
+  }
+  else if (action === 'deleteReview') { UI.confirm('Delete this review?',function(){S.remove('orbitshop_reviews',id);UI.toast('Review deleted','info');renderModule()}) }
+  else if (action === 'reportTab') { ModReports._tab=tab;renderModule() }
+  else if (action === 'exportCSV') {
+    var orders=S.getList('orbitshop_orders'),custs=S.getList('orbitshop_customers');
+    if(ModReports._tab==='sales'){var byStatus={};orders.forEach(function(o){byStatus[o.status]=(byStatus[o.status]||0)+1});U.toCSV(['Status','Count'],Object.entries(byStatus).map(function(e){return[e[0],e[1]]}))}
+    else if(ModReports._tab==='revenue'){U.toCSV(['Order','Customer','Amount','Payment','Date'],orders.filter(function(o){return o.payment==='Paid'}).map(function(o){return[o.id,custs.find(function(c){return c.id===o.customer})?.name||'',o.amount,o.payment,o.date]}))}
+    else if(ModReports._tab==='products'){U.toCSV(['Name','Category','Price','Stock','Status'],S.getList('orbitshop_products').map(function(p){return[p.name,p.category,p.price,p.stock,p.status]}))}
+    else{U.toCSV(['Name','Email','City','Orders','Total Spent'],custs.map(function(c){var co=orders.filter(function(o){return o.customer===c.id});return[c.name,c.email,c.city,co.length,co.reduce(function(s,o){return s+o.amount},0)]}))}
+    UI.toast('CSV exported');
+  }
+  else if (action === 'printReport') { window.print() }
+  else if (action === 'saveSettings') { S.setObj('orbitshop_settings',{storeName:g('s_name'),storeEmail:g('s_email'),phone:g('s_phone'),address:g('s_address'),currency:g('s_currency'),tax:+g('s_tax'),theme:document.documentElement.classList.contains('dark')?'dark':'light'});UI.toast('Settings saved') }
+  else if (action === 'toggleTheme') { toggleTheme();renderModule() }
+  else if (action === 'backupData') {
+    var data={};Object.keys(localStorage).filter(function(k){return k.startsWith('orbitshop_')}).forEach(function(k){data[k]=localStorage.getItem(k)});
+    var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='orbitshop_backup_'+U.today()+'.json';a.click();URL.revokeObjectURL(a.href);UI.toast('Backup exported');
+  }
+  else if (action === 'restoreData') { document.getElementById('restoreFile')?.click() }
+  else if (action === 'clearAllData') { UI.confirm('This will permanently delete ALL OrbitShop data. Continue?',function(){S.clearAll();seedData();UI.toast('All data cleared and reset','info');navigate('dashboard')}) }
+  else if (action === 'saveProfile') { S.setObj('orbitshop_profile',{name:g('p_name'),email:g('p_email'),phone:g('p_phone'),image:g('p_image')});UI.toast('Profile updated');renderModule() }
+  else if (action === 'changePassword') {
+    var cur=g('p_curpw'),nw=g('p_newpw'),conf=g('p_confpw');
+    if(!cur||!nw){UI.toast('Fill all fields','error');return}
+    if(nw!==conf){UI.toast('Passwords do not match','error');return}
+    UI.toast('Password changed successfully (demo)');
+  }
+}
+
+/* Restore file */
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'restoreFile') {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) { try { var data=JSON.parse(ev.target.result);Object.entries(data).forEach(function(e){localStorage.setItem(e[0],e[1])});UI.toast('Data restored successfully');navigate('dashboard') } catch(err) { UI.toast('Invalid backup file','error') } };
+    reader.readAsText(file); e.target.value = '';
+  }
+});
+
+/* Global search */
+document.getElementById('globalSearch').addEventListener('input', function() {
+  var q = this.value.trim().toLowerCase(); if (!q) return;
+  var prods = S.getList('orbitshop_products'), custs = S.getList('orbitshop_customers'), orders = S.getList('orbitshop_orders');
+  if (prods.some(function(p){return p.name.toLowerCase().indexOf(q)>=0})) { ModProducts._search=q;currentPage.products=1;navigate('products');document.getElementById('globalSearch').value=q }
+  else if (custs.some(function(c){return c.name.toLowerCase().indexOf(q)>=0||c.email.toLowerCase().indexOf(q)>=0})) { ModCustomers._search=q;currentPage.customers=1;navigate('customers');document.getElementById('globalSearch').value=q }
+  else if (orders.some(function(o){return o.id.toLowerCase().indexOf(q)>=0})) { ModOrders._search=q;currentPage.orders=1;navigate('orders');document.getElementById('globalSearch').value=q }
+});
+document.getElementById('globalSearch').addEventListener('keydown', function(e) { if (e.key === 'Enter') this.dispatchEvent(new Event('input')) });
+
+function toggleTheme() {
+  var html = document.documentElement;
+  html.classList.toggle('dark'); html.classList.toggle('light');
+  var s = S.getObj('orbitshop_settings'); s.theme = html.classList.contains('dark') ? 'dark' : 'light'; S.setObj('orbitshop_settings', s);
+  UI.icons();
+}
+
+/* ===== INIT ===== */
+(function() {
+  if (Auth.check()) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').classList.add('active');
+    seedData(); buildNav(); renderModule();
+  }
+})();
+</script>
+</body>
+</html>
